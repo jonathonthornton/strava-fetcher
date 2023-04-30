@@ -1,65 +1,174 @@
 package net.jon.stravafetcher.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
+
 import java.util.List;
 
+@Entity
+@Table(name = "ride_activity")
 public class RideActivity {
-    private int resourceState;
-    private Athlete athlete;
-    private String name;
-    private double distance;
-    private int movingTime;
-    private int elapsedTime;
-    private double totalElevationGain;
-    private String type;
-    private String sportType;
-    private String workoutType;
+    @Id
     private long id;
-    private String externalId;
-    private long uploadId;
-    private String startDate;
-    private String startDateLocal;
-    private String timezone;
-    private int utcOffset;
+
+    @JsonProperty("start_latlng")
+    @ElementCollection
+    @CollectionTable(name = "ride_activity_start_latlng", joinColumns = @JoinColumn(name = "ride_activity_id"))
+    @Column(name = "start_latlng")
     private List<Double> startLatLng;
+
+    @JsonProperty("end_latlng")
+    @ElementCollection
+    @CollectionTable(name = "ride_activity_end_latlng", joinColumns = @JoinColumn(name = "ride_activity_id"))
+    @Column(name = "end_latlng")
     private List<Double> endLatLng;
-    private String locationCity;
-    private String locationState;
-    private String locationCountry;
-    private int achievementCount;
-    private int kudosCount;
-    private int commentCount;
-    private int athleteCount;
-    private int photoCount;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "activity_map_id")
     private ActivityMap map;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "athlete_id")
+    private Athlete athlete;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(name = "distance")
+    private double distance;
+
+    @Column(name = "moving_time")
+    private int movingTime;
+
+    @Column(name = "elapsed_time")
+    private int elapsedTime;
+
+    @Column(name = "total_elevation_gain")
+    private double totalElevationGain;
+
+    @Column(name = "type")
+    private String type;
+
+    @Column(name = "sport_type")
+    private String sportType;
+
+    @Column(name = "start_date")
+    private String startDate;
+
+    @Column(name = "start_date_local")
+    private String startDateLocal;
+
+    @Column(name = "timezone")
+    private String timezone;
+
+    @Column(name = "utc_offset")
+    private int utcOffset;
+
+    @Column(name = "location_country")
+    private String locationCountry;
+
+    @Column(name = "achievement_count")
+    private int achievementCount;
+
+    @Column(name = "kudos_count")
+    private int kudosCount;
+
+    @Column(name = "comment_count")
+    private int commentCount;
+
+    @Column(name = "athlete_count")
+    private int athleteCount;
+
+    @Column(name = "photo_count")
+    private int photoCount;
+
+    @Column(name = "trainer")
     private boolean trainer;
+
+    @Column(name = "commute")
     private boolean commute;
-    private boolean manual;
+
+    @Column(name = "is_private")
     private boolean isPrivate;
+
+    @Column(name = "flagged")
     private boolean flagged;
+
+    @Column(name = "gear_id")
     private String gearId;
-    private boolean fromAcceptedTag;
+
+    @Column(name = "average_speed")
     private double averageSpeed;
+
+    @Column(name = "max_speed")
     private double maxSpeed;
+
+    @Column(name = "average_cadence")
     private double averageCadence;
+
+    @Column(name = "average_watts")
     private double averageWatts;
+
+    @Column(name = "weighted_average_watts")
     private int weightedAverageWatts;
+
+    @Column(name = "kilojoules")
     private double kilojoules;
+
+    @Column(name = "device_watts")
     private boolean deviceWatts;
+
+    @Column(name = "has_heartrate")
     private boolean hasHeartrate;
+
+    @Column(name = "average_heartrate")
     private double averageHeartrate;
+
+    @Column(name = "max_heartrate")
     private int maxHeartrate;
+
+    @Column(name = "max_watts")
     private int maxWatts;
+
+    @Column(name = "pr_count")
     private int prCount;
+
+    @Column(name = "total_photo_count")
     private int totalPhotoCount;
-    private boolean hasKudoed;
+
+    @Column(name = "suffer_score")
     private int sufferScore;
 
-    public int getResourceState() {
-        return resourceState;
+    public long getId() {
+        return id;
     }
 
-    public void setResourceState(int resourceState) {
-        this.resourceState = resourceState;
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public List<Double> getStartLatLng() {
+        return startLatLng;
+    }
+
+    public void setStartLatLng(List<Double> startLatLng) {
+        this.startLatLng = startLatLng;
+    }
+
+    public List<Double> getEndLatLng() {
+        return endLatLng;
+    }
+
+    public void setEndLatLng(List<Double> endLatLng) {
+        this.endLatLng = endLatLng;
+    }
+
+    public ActivityMap getMap() {
+        return map;
+    }
+
+    public void setMap(ActivityMap map) {
+        this.map = map;
     }
 
     public Athlete getAthlete() {
@@ -126,38 +235,6 @@ public class RideActivity {
         this.sportType = sportType;
     }
 
-    public String getWorkoutType() {
-        return workoutType;
-    }
-
-    public void setWorkoutType(String workoutType) {
-        this.workoutType = workoutType;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
-    }
-
-    public long getUploadId() {
-        return uploadId;
-    }
-
-    public void setUploadId(long uploadId) {
-        this.uploadId = uploadId;
-    }
-
     public String getStartDate() {
         return startDate;
     }
@@ -188,38 +265,6 @@ public class RideActivity {
 
     public void setUtcOffset(int utcOffset) {
         this.utcOffset = utcOffset;
-    }
-
-    public List<Double> getStartLatLng() {
-        return startLatLng;
-    }
-
-    public void setStartLatLng(List<Double> startLatLng) {
-        this.startLatLng = startLatLng;
-    }
-
-    public List<Double> getEndLatLng() {
-        return endLatLng;
-    }
-
-    public void setEndLatLng(List<Double> endLatLng) {
-        this.endLatLng = endLatLng;
-    }
-
-    public String getLocationCity() {
-        return locationCity;
-    }
-
-    public void setLocationCity(String locationCity) {
-        this.locationCity = locationCity;
-    }
-
-    public String getLocationState() {
-        return locationState;
-    }
-
-    public void setLocationState(String locationState) {
-        this.locationState = locationState;
     }
 
     public String getLocationCountry() {
@@ -270,14 +315,6 @@ public class RideActivity {
         this.photoCount = photoCount;
     }
 
-    public ActivityMap getMap() {
-        return map;
-    }
-
-    public void setMap(ActivityMap map) {
-        this.map = map;
-    }
-
     public boolean isTrainer() {
         return trainer;
     }
@@ -292,14 +329,6 @@ public class RideActivity {
 
     public void setCommute(boolean commute) {
         this.commute = commute;
-    }
-
-    public boolean isManual() {
-        return manual;
-    }
-
-    public void setManual(boolean manual) {
-        this.manual = manual;
     }
 
     public boolean isPrivate() {
@@ -324,14 +353,6 @@ public class RideActivity {
 
     public void setGearId(String gearId) {
         this.gearId = gearId;
-    }
-
-    public boolean isFromAcceptedTag() {
-        return fromAcceptedTag;
-    }
-
-    public void setFromAcceptedTag(boolean fromAcceptedTag) {
-        this.fromAcceptedTag = fromAcceptedTag;
     }
 
     public double getAverageSpeed() {
@@ -438,70 +459,11 @@ public class RideActivity {
         this.totalPhotoCount = totalPhotoCount;
     }
 
-    public boolean isHasKudoed() {
-        return hasKudoed;
-    }
-
-    public void setHasKudoed(boolean hasKudoed) {
-        this.hasKudoed = hasKudoed;
-    }
-
     public int getSufferScore() {
         return sufferScore;
     }
 
     public void setSufferScore(int sufferScore) {
         this.sufferScore = sufferScore;
-    }
-
-    public static class Athlete {
-        private int id;
-        private int resourceState;
-
-        public int getId() {
-            return id;
-        }
-
-        public void setId(int id) {
-            this.id = id;
-        }
-
-        public int getResourceState() {
-            return resourceState;
-        }
-
-        public void setResourceState(int resourceState) {
-            this.resourceState = resourceState;
-        }
-    }
-
-    public static class ActivityMap {
-        private String id;
-        private String summaryPolyline;
-        private int resourceState;
-
-        public String getId() {
-            return id;
-        }
-
-        public void setId(String id) {
-            this.id = id;
-        }
-
-        public String getSummaryPolyline() {
-            return summaryPolyline;
-        }
-
-        public void setSummaryPolyline(String summaryPolyline) {
-            this.summaryPolyline = summaryPolyline;
-        }
-
-        public int getResourceState() {
-            return resourceState;
-        }
-
-        public void setResourceState(int resourceState) {
-            this.resourceState = resourceState;
-        }
     }
 }

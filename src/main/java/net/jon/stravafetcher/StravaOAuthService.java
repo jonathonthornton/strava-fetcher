@@ -3,10 +3,7 @@ package net.jon.stravafetcher;
 import net.jon.stravafetcher.model.OAuthTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -41,8 +38,34 @@ public class StravaOAuthService {
         headers.add("Content-Type", "application/x-www-form-urlencoded");
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(requestBody, headers);
-        ResponseEntity<OAuthTokenResponse> response = restTemplate.exchange(STRAVA_TOKEN_URL, HttpMethod.POST, request, OAuthTokenResponse.class);
+        ResponseEntity<OAuthTokenResponse> response = restTemplate.exchange(
+                STRAVA_TOKEN_URL,
+                HttpMethod.POST,
+                request,
+                OAuthTokenResponse.class);
         log.debug("response {}", response);
         return response.getBody();
+    }
+
+    public OAuthTokenResponse refreshToken(String refreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", clientId);
+        requestBody.add("client_secret", clientSecret);
+        requestBody.add("refresh_token", refreshToken);
+        requestBody.add("grant_type", "refresh_token");
+
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<OAuthTokenResponse> responseEntity = restTemplate.exchange(
+                STRAVA_TOKEN_URL,
+                HttpMethod.POST,
+                requestEntity,
+                OAuthTokenResponse.class);
+
+        return responseEntity.getBody();
     }
 }

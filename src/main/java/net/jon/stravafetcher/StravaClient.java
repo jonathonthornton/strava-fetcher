@@ -2,8 +2,10 @@ package net.jon.stravafetcher;
 
 import net.jon.stravafetcher.model.OAuthTokenResponse;
 import net.jon.stravafetcher.model.RideActivity;
+import net.jon.stravafetcher.repository.AthleteRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.jon.stravafetcher.repository.RideActivityRepository;
 
 @Service
 public class StravaClient {
@@ -27,6 +30,11 @@ public class StravaClient {
     @Value("${strava.redirect.uri}")
     private String redirectUri;
 
+    @Autowired
+    private AthleteRepository athleteRepository;
+    @Autowired
+    private RideActivityRepository rideActivityRepository;
+
     public void authorizeAndFetchActivities() {
         String authorizationUrl = buildAuthorizationUrl();
         String authorizationCode = getAuthorizationCode(authorizationUrl);
@@ -36,7 +44,16 @@ public class StravaClient {
         StravaService stravaService = new StravaService(tokenResponse.getAccessToken());
         List<RideActivity> activities = stravaService.getActivities();
 
-        activities.forEach(activity -> System.out.println(activity.getName() + " - " + activity.getDistance()));
+        activities.forEach((activity) -> {
+            log.debug("Activity: {}", activity);
+            if (!athleteRepository.existsById((long) activity.getAthlete().getId())) {
+                athleteRepository.save(activity.getAthlete());
+            }
+            if (!rideActivityRepository.existsById(activity.getId())) {
+                rideActivityRepository.save(activity);
+            }
+        });
+        log.debug("Activities fetched and saved");
     }
 
     private String buildAuthorizationUrl() {
