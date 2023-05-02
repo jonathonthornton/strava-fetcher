@@ -1,8 +1,8 @@
-package net.jon.stravafetcher;
+package net.jon.stravafetcher.client;
 
-import net.jon.stravafetcher.model.OAuthTokenResponse;
 import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.AthleteRepository;
+import net.jon.stravafetcher.service.StravaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,24 +35,29 @@ public class StravaClient {
     @Autowired
     private RideActivityRepository rideActivityRepository;
 
+    @Autowired
+    private StravaService stravaService;
+
     public void authorizeAndFetchActivities() {
         String authorizationUrl = buildAuthorizationUrl();
         String authorizationCode = getAuthorizationCode(authorizationUrl);
         StravaOAuthService stravaOAuthService = new StravaOAuthService(clientId, clientSecret, redirectUri);
         OAuthTokenResponse tokenResponse = stravaOAuthService.getAccessToken(authorizationCode);
 
-        StravaService stravaService = new StravaService(tokenResponse.getAccessToken());
-        List<RideActivity> activities = stravaService.getActivities();
+        for (int page = 1; page <= 2; page++) {
+            List<RideActivity> activities = stravaService.getActivities(tokenResponse.getAccessToken(), page, 10);
 
-        activities.forEach((activity) -> {
-            log.debug("Activity: {}", activity);
-            if (!athleteRepository.existsById((long) activity.getAthlete().getId())) {
-                athleteRepository.save(activity.getAthlete());
-            }
-            if (!rideActivityRepository.existsById(activity.getId())) {
-                rideActivityRepository.save(activity);
-            }
-        });
+            activities.forEach((activity) -> {
+//            log.debug("Activity: {}", activity);
+                if (!athleteRepository.existsById((long) activity.getAthlete().getId())) {
+                    athleteRepository.save(activity.getAthlete());
+                }
+                if (!rideActivityRepository.existsById(activity.getId())) {
+                    rideActivityRepository.save(activity);
+                }
+            });
+            log.debug("Page {} fetched and saved", page);
+        }
         log.debug("Activities fetched and saved");
     }
 
@@ -69,7 +74,6 @@ public class StravaClient {
         try {
             System.out.println("Please open the following URL in your browser, authorize the application, and then paste the redirected URL back here:");
             System.out.println(authorizationUrl);
-
             Scanner scanner = new Scanner(System.in);
             String redirectedUrl = scanner.nextLine();
             return extractAuthorizationCode(redirectedUrl);

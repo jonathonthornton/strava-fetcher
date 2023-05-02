@@ -1,33 +1,34 @@
-package net.jon.stravafetcher;
+package net.jon.stravafetcher.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import net.jon.stravafetcher.model.RideActivity;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+@Service
 public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
 
-    private final String accessToken;
+    public List<RideActivity> getActivities(String accessToken, int page, int perPage) {
+        // Use UriComponentsBuilder to add query parameters
+        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+                .path("/athlete/activities")
+                .queryParam("page", page)
+                .queryParam("per_page", perPage)
+                .toUriString();
 
-    public StravaService(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public List<RideActivity> getActivities() {
-        String url = STRAVA_API_BASE_URL + "/athlete/activities";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
-        headers.setAccept(Arrays.asList(org.springframework.http.MediaType.APPLICATION_JSON));
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
         HttpEntity<String> request = new HttpEntity<>(headers);
         RestTemplate restTemplate = new RestTemplate();
 
@@ -37,9 +38,6 @@ public class StravaService {
                 HttpMethod.GET,
                 request,
                 String.class);
-
-        // Print the raw JSON response.
-        System.out.println("Raw JSON Response: " + rawJsonResponse.getBody());
 
         // Deserialize the raw JSON response to a RideActivity[] array.
         ObjectMapper objectMapper = new ObjectMapper();
@@ -53,6 +51,6 @@ public class StravaService {
             e.printStackTrace();
         }
 
-        return Arrays.asList(rideActivities);
+        return Arrays.asList(rideActivities != null ? rideActivities : new RideActivity[0]);
     }
 }

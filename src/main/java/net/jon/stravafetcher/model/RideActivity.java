@@ -3,6 +3,8 @@ package net.jon.stravafetcher.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Entity
@@ -46,23 +48,11 @@ public class RideActivity {
     @Column(name = "total_elevation_gain")
     private double totalElevationGain;
 
-    @Column(name = "type")
-    private String type;
-
     @Column(name = "sport_type")
     private String sportType;
 
-    @Column(name = "start_date")
-    private String startDate;
-
     @Column(name = "start_date_local")
-    private String startDateLocal;
-
-    @Column(name = "timezone")
-    private String timezone;
-
-    @Column(name = "utc_offset")
-    private int utcOffset;
+    private LocalDateTime startDateLocal;
 
     @Column(name = "location_country")
     private String locationCountry;
@@ -192,7 +182,7 @@ public class RideActivity {
     }
 
     public void setDistance(double distance) {
-        this.distance = distance;
+        this.distance = distance / 1000;
     }
 
     public int getMovingTime() {
@@ -219,14 +209,6 @@ public class RideActivity {
         this.totalElevationGain = totalElevationGain;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getSportType() {
         return sportType;
     }
@@ -235,36 +217,13 @@ public class RideActivity {
         this.sportType = sportType;
     }
 
-    public String getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
-    }
-
-    public String getStartDateLocal() {
+    public LocalDateTime getStartDateLocal() {
         return startDateLocal;
     }
 
     public void setStartDateLocal(String startDateLocal) {
-        this.startDateLocal = startDateLocal;
-    }
-
-    public String getTimezone() {
-        return timezone;
-    }
-
-    public void setTimezone(String timezone) {
-        this.timezone = timezone;
-    }
-
-    public int getUtcOffset() {
-        return utcOffset;
-    }
-
-    public void setUtcOffset(int utcOffset) {
-        this.utcOffset = utcOffset;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        this.startDateLocal = LocalDateTime.parse(startDateLocal, formatter);
     }
 
     public String getLocationCountry() {
@@ -360,7 +319,7 @@ public class RideActivity {
     }
 
     public void setAverageSpeed(double averageSpeed) {
-        this.averageSpeed = averageSpeed;
+        this.averageSpeed = metersPerSecondToKilometersPerHour(averageSpeed);
     }
 
     public double getMaxSpeed() {
@@ -368,7 +327,7 @@ public class RideActivity {
     }
 
     public void setMaxSpeed(double maxSpeed) {
-        this.maxSpeed = maxSpeed;
+        this.maxSpeed =  metersPerSecondToKilometersPerHour(maxSpeed);
     }
 
     public double getAverageCadence() {
@@ -465,5 +424,9 @@ public class RideActivity {
 
     public void setSufferScore(int sufferScore) {
         this.sufferScore = sufferScore;
+    }
+
+    public double metersPerSecondToKilometersPerHour(double metersPerSecond) {
+        return (metersPerSecond*3600)/1000;
     }
 }

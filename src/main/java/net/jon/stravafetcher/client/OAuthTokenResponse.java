@@ -1,4 +1,4 @@
-package net.jon.stravafetcher.model;
+package net.jon.stravafetcher.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
