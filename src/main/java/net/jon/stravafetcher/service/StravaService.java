@@ -3,6 +3,7 @@ package net.jon.stravafetcher.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.RideActivity;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,25 @@ public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
 
     public List<RideActivity> getActivities(String accessToken, int page, int perPage) {
-        // Use UriComponentsBuilder to add query parameters
         String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
                 .path("/athlete/activities")
                 .queryParam("page", page)
                 .queryParam("per_page", perPage)
                 .toUriString();
 
+        RideActivity[] rideActivities = fetchData(url, accessToken, RideActivity[].class);
+        return Arrays.asList(rideActivities != null ? rideActivities : new RideActivity[0]);
+    }
+
+    public Athlete getAthlete(String accessToken) {
+        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+                .path("/athlete")
+                .toUriString();
+
+        return fetchData(url, accessToken, Athlete.class);
+    }
+
+    private <T> T fetchData(String url, String accessToken, Class<T> responseType) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
@@ -32,25 +45,23 @@ public class StravaService {
         HttpEntity<String> request = new HttpEntity<>(headers);
         RestTemplate restTemplate = new RestTemplate();
 
-        // Fetch the raw JSON response as a String.
         ResponseEntity<String> rawJsonResponse = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 request,
                 String.class);
 
-        // Deserialize the raw JSON response to a RideActivity[] array.
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
 
-        RideActivity[] rideActivities = null;
+        T result = null;
         try {
-            rideActivities = objectMapper.readValue(rawJsonResponse.getBody(), RideActivity[].class);
+            result = objectMapper.readValue(rawJsonResponse.getBody(), responseType);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return Arrays.asList(rideActivities != null ? rideActivities : new RideActivity[0]);
+        return result;
     }
 }

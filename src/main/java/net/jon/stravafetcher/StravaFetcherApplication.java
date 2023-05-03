@@ -14,9 +14,14 @@ public class StravaFetcherApplication {
         SpringApplication.run(StravaFetcherApplication.class, args);
     }
 
+//    @Bean
+//    public CommandLineRunner run(StravaClient stravaClient) {
+//        return (args) -> stravaClient.fetchActivities();
+//    }
+
     @Bean
     public CommandLineRunner run(StravaClient stravaClient) {
-        return (args) -> stravaClient.authorizeAndFetchActivities();
+        return (args) -> stravaClient.fetchAthlete();
     }
 
 //    @Bean

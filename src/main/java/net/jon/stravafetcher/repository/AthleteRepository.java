@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AthleteRepository extends JpaRepository<Athlete, Long> {
-    // Additional query methods can be added as needed
 }

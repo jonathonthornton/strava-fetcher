@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.client;
 
+import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.AthleteRepository;
 import net.jon.stravafetcher.service.StravaService;
@@ -19,7 +20,7 @@ import net.jon.stravafetcher.repository.RideActivityRepository;
 @Service
 public class StravaClient {
     private static final String STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize";
-    private static final String AUTHORIZATION_SCOPE = "activity:read,activity:read_all";
+    private static final String AUTHORIZATION_SCOPE = "activity:read,activity:read_all,profile:read_all";
     private static final Logger log = LoggerFactory.getLogger(StravaClient.class);
     @Value("${strava.client.id}")
     private String clientId;
@@ -38,17 +39,19 @@ public class StravaClient {
     @Autowired
     private StravaService stravaService;
 
-    public void authorizeAndFetchActivities() {
+    private  String getAccessToken() {
         String authorizationUrl = buildAuthorizationUrl();
         String authorizationCode = getAuthorizationCode(authorizationUrl);
         StravaOAuthService stravaOAuthService = new StravaOAuthService(clientId, clientSecret, redirectUri);
         OAuthTokenResponse tokenResponse = stravaOAuthService.getAccessToken(authorizationCode);
+        return tokenResponse.getAccessToken();
+    }
 
+    public void fetchActivities() {
         for (int page = 1; page <= 2; page++) {
-            List<RideActivity> activities = stravaService.getActivities(tokenResponse.getAccessToken(), page, 10);
+            List<RideActivity> activities = stravaService.getActivities(getAccessToken(), page, 10);
 
             activities.forEach((activity) -> {
-//            log.debug("Activity: {}", activity);
                 if (!athleteRepository.existsById((long) activity.getAthlete().getId())) {
                     athleteRepository.save(activity.getAthlete());
                 }
@@ -59,6 +62,13 @@ public class StravaClient {
             log.debug("Page {} fetched and saved", page);
         }
         log.debug("Activities fetched and saved");
+    }
+
+    public void fetchAthlete() {
+        Athlete athlete = stravaService.getAthlete(getAccessToken());
+        if (!athleteRepository.existsById((long) athlete.getId())) {
+            athleteRepository.save(athlete);
+        }
     }
 
     private String buildAuthorizationUrl() {
