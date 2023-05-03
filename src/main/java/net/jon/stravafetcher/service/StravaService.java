@@ -11,12 +11,32 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalField;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
+
+    public List<RideActivity> getActivities(String accessToken, int page, int perPage, LocalDateTime after) {
+        ZoneId melbourneZone = ZoneId.of("Australia/Melbourne");
+        ZonedDateTime afterInMelbourne = after.atZone(melbourneZone);
+        long afterEpochSeconds = afterInMelbourne.toEpochSecond();
+
+        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+                .path("/athlete/activities")
+                .queryParam("page", page)
+                .queryParam("per_page", perPage)
+                .queryParam("after", afterEpochSeconds)
+                .toUriString();
+
+        RideActivity[] rideActivities = fetchData(url, accessToken, RideActivity[].class);
+        return Arrays.asList(rideActivities != null ? rideActivities : new RideActivity[0]);
+    }
 
     public List<RideActivity> getActivities(String accessToken, int page, int perPage) {
         String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)

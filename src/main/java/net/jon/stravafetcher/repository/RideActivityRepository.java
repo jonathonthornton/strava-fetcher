@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -21,4 +22,7 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
 
     @Query("SELECT COUNT(r) FROM RideActivity r WHERE r.distance >= :minDistance AND r.distance <= :maxDistance")
     int countRidesBetweenDistances(@Param("minDistance") int minDistance, @Param("maxDistance") int maxDistance);
+
+    @Query("SELECT MAX(r.startDateLocal) FROM RideActivity r")
+    LocalDateTime findMostRecentStartDateLocal();
 }
