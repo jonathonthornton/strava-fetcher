@@ -13,7 +13,7 @@ public class EddingtonNumberService {
     private RideActivityRepository rideActivityRepository;
 
     public  int calculateEddingtonNumber() {
-        List<Integer> dailyDistances = rideActivityRepository.findAllDistancesInKilometersRoundedDown();
+        List<Integer> dailyDistances = rideActivityRepository.findAllDistances();
         dailyDistances.sort(Collections.reverseOrder());
 
         int eddingtonNumber = 0;

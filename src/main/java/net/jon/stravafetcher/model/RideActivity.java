@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
@@ -53,6 +54,9 @@ public class RideActivity {
 
     @Column(name = "start_date_local")
     private LocalDateTime startDateLocal;
+
+    @Column(name = "timezone")
+    private String timezone;
 
     @Column(name = "location_country")
     private String locationCountry;
@@ -153,6 +157,7 @@ public class RideActivity {
         this.endLatLng = endLatLng;
     }
 
+    @JsonIgnore
     public ActivityMap getMap() {
         return map;
     }
@@ -161,6 +166,7 @@ public class RideActivity {
         this.map = map;
     }
 
+    @JsonIgnore
     public Athlete getAthlete() {
         return athlete;
     }
@@ -224,6 +230,14 @@ public class RideActivity {
     public void setStartDateLocal(String startDateLocal) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
         this.startDateLocal = LocalDateTime.parse(startDateLocal, formatter);
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 
     public String getLocationCountry() {

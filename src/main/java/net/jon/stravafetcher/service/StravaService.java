@@ -22,16 +22,12 @@ import java.util.List;
 public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
 
-    public List<RideActivity> getActivities(String accessToken, int page, int perPage, LocalDateTime after) {
-        ZoneId melbourneZone = ZoneId.of("Australia/Melbourne");
-        ZonedDateTime afterInMelbourne = after.atZone(melbourneZone);
-        long afterEpochSeconds = afterInMelbourne.toEpochSecond();
-
+    public List<RideActivity> getActivities(String accessToken, int page, int perPage, long after) {
         String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
                 .path("/athlete/activities")
                 .queryParam("page", page)
                 .queryParam("per_page", perPage)
-                .queryParam("after", afterEpochSeconds)
+                .queryParam("after", after)
                 .toUriString();
 
         RideActivity[] rideActivities = fetchData(url, accessToken, RideActivity[].class);
