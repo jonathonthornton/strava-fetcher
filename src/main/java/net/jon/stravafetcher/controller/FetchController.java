@@ -1,9 +1,9 @@
 package net.jon.stravafetcher.controller;
 
-import net.jon.stravafetcher.client.StravaClient;
 import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.AthleteRepository;
+import net.jon.stravafetcher.repository.BikeRepository;
 import net.jon.stravafetcher.repository.RideActivityRepository;
 import net.jon.stravafetcher.service.StravaService;
 import org.slf4j.Logger;
@@ -23,6 +23,7 @@ import java.util.List;
 @RequestMapping("/fetch")
 public class FetchController {
     public static final int PER_PAGE = 100;
+    public static final int AFTER_YEAR = 2023;
     private static final Logger log = LoggerFactory.getLogger(FetchController.class);
     @Autowired
     private AthleteRepository athleteRepository;
@@ -32,7 +33,27 @@ public class FetchController {
     private StravaService stravaService;
 
     @GetMapping("/activities/{accessToken}")
-    public int getActivities(@PathVariable String accessToken) {
+    public int fetchActivities(@PathVariable String accessToken) {
+        getAthlete(accessToken);
+        return getActivities(accessToken);
+    }
+
+    private Athlete getAthlete(String accessToken) {
+        Athlete athlete = stravaService.getAthlete(accessToken);
+        log.debug("Fetched athlete {}", athlete);
+
+        athlete.getBikes().forEach(bike -> {
+            bike.setAthlete(athlete);
+        });
+
+        if (!athleteRepository.existsById(athlete.getId())) {
+            athleteRepository.save(athlete);
+        }
+
+        return athlete;
+    }
+
+    private int getActivities(String accessToken) {
         ZonedDateTime afterDateTime = getAfterDateTime();
         log.info("Fetching activities after {}", afterDateTime);
 
@@ -59,19 +80,11 @@ public class FetchController {
         return fetched;
     }
 
-    @GetMapping("/athlete/{accessToken}")
-    public void getAthlete(@PathVariable String accessToken) {
-        Athlete athlete = stravaService.getAthlete(accessToken);
-        if (!athleteRepository.existsById(athlete.getId())) {
-            athleteRepository.save(athlete);
-        }
-    }
-
     private ZonedDateTime getAfterDateTime() {
         RideActivity rideActivity = rideActivityRepository.findMostRecentRideActivity();
 
         if (rideActivity == null) {
-            LocalDateTime localDateTime = LocalDateTime.of(2023, 1, 1, 0, 0);
+            LocalDateTime localDateTime = LocalDateTime.of(AFTER_YEAR, 1, 1, 0, 0);
             ZoneId zoneId = ZoneId.systemDefault();
             return ZonedDateTime.of(localDateTime, zoneId);
         }

@@ -10,12 +10,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Table(name = "activity_map")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ActivityMap {
+    private static final int MAX_POLYLINE_LENGTH = 5000;
 
     @Id
     @Column(name = "id")
     private String id;
 
-    @Column(name = "summary_polyline", length = 10000)
+    @Column(name = "summary_polyline", length = MAX_POLYLINE_LENGTH)
     private String summaryPolyline;
 
     @Column(name = "resource_state")
@@ -23,14 +24,12 @@ public class ActivityMap {
 
     public ActivityMap() {}
 
-    // Constructor with all fields
     public ActivityMap(String id, String summaryPolyline, int resourceState) {
         this.id = id;
         this.summaryPolyline = summaryPolyline;
         this.resourceState = resourceState;
     }
 
-    // Getters and setters
     public String getId() {
         return id;
     }

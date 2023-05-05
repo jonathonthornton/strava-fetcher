@@ -30,9 +30,7 @@ public class StravaClient {
     private FetchController fetchController;
 
     public void fetchActivities() {
-        String accessToken = getAccessToken();
-        fetchController.getAthlete(accessToken);
-        fetchController.getActivities(accessToken);
+        fetchController.fetchActivities(getAccessToken());
     }
 
     private String getAccessToken() {

@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -20,6 +21,7 @@ public class Bike {
     @Column(name = "distance")
     private double distance;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "athlete_id")
     private Athlete athlete;
@@ -70,5 +72,17 @@ public class Bike {
 
     public void setAthlete(Athlete athlete) {
         this.athlete = athlete;
+    }
+
+    @Override
+    public String toString() {
+        return "Bike{" +
+                "id='" + id + '\'' +
+                ", primary=" + primary +
+                ", name='" + name + '\'' +
+                ", resourceState=" + resourceState +
+                ", distance=" + distance +
+                ", athlete=" + athlete +
+                '}';
     }
 }

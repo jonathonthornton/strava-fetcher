@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -7,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "athlete")
 public class Athlete {
@@ -55,20 +57,12 @@ public class Athlete {
     @Column(name = "profile")
     private String profile;
 
-    @Column(name = "friend")
-    private String friend;
-
-    @Column(name = "follower")
-    private String follower;
-
     @Column(name = "follower_count")
     private int followerCount;
 
     @Column(name = "friend_count")
     private int friendCount;
 
-    @Column(name = "mutual_friend_count")
-    private int mutualFriendCount;
 
     @Column(name = "athlete_type")
     private int athleteType;
@@ -210,22 +204,6 @@ public class Athlete {
         this.profile = profile;
     }
 
-    public String getFriend() {
-        return friend;
-    }
-
-    public void setFriend(String friend) {
-        this.friend = friend;
-    }
-
-    public String getFollower() {
-        return follower;
-    }
-
-    public void setFollower(String follower) {
-        this.follower = follower;
-    }
-
     public int getFollowerCount() {
         return followerCount;
     }
@@ -240,14 +218,6 @@ public class Athlete {
 
     public void setFriendCount(int friendCount) {
         this.friendCount = friendCount;
-    }
-
-    public int getMutualFriendCount() {
-        return mutualFriendCount;
-    }
-
-    public void setMutualFriendCount(int mutualFriendCount) {
-        this.mutualFriendCount = mutualFriendCount;
     }
 
     public int getAthleteType() {
@@ -296,5 +266,34 @@ public class Athlete {
 
     public void setBikes(List<Bike> bikes) {
         this.bikes = bikes;
+    }
+
+    @Override
+    public String toString() {
+        return "Athlete{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", resourceState=" + resourceState +
+                ", firstname='" + firstname + '\'' +
+                ", lastname='" + lastname + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", country='" + country + '\'' +
+                ", sex='" + sex + '\'' +
+                ", premium=" + premium +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", badgeTypeId=" + badgeTypeId +
+                ", profileMedium='" + profileMedium + '\'' +
+                ", profile='" + profile + '\'' +
+                ", followerCount=" + followerCount +
+                ", friendCount=" + friendCount +
+                ", athleteType=" + athleteType +
+                ", datePreference='" + datePreference + '\'' +
+                ", measurementPreference='" + measurementPreference + '\'' +
+                ", ftp=" + ftp +
+                ", weight=" + weight +
+                ", bikes=" + bikes +
+                '}';
     }
 }

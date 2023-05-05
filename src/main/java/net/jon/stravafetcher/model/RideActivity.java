@@ -157,7 +157,7 @@ public class RideActivity {
         this.endLatLng = endLatLng;
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public ActivityMap getMap() {
         return map;
     }
@@ -166,7 +166,7 @@ public class RideActivity {
         this.map = map;
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public Athlete getAthlete() {
         return athlete;
     }
