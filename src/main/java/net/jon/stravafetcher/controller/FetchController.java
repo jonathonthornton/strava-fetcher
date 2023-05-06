@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/fetch")
@@ -66,6 +68,7 @@ public class FetchController {
                     page,
                     PER_PAGE,
                     afterDateTime.toEpochSecond());
+            log.debug("Fetched {} activities", activities.size());
 
             if (activities.isEmpty()) {
                 break;
@@ -74,9 +77,9 @@ public class FetchController {
             activities.forEach(rideActivityRepository::save);
             page++;
             fetched += activities.size();
-            log.debug("Fetched {} activities", fetched);
         }
 
+        log.debug("Fetched a total of {} activities", fetched);
         return fetched;
     }
 

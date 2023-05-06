@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Entity
 @Table(name = "ride_activity")
@@ -157,7 +159,7 @@ public class RideActivity {
         this.endLatLng = endLatLng;
     }
 
-//    @JsonIgnore
+    @JsonIgnore
     public ActivityMap getMap() {
         return map;
     }
@@ -166,7 +168,7 @@ public class RideActivity {
         this.map = map;
     }
 
-//    @JsonIgnore
+    //    @JsonIgnore
     public Athlete getAthlete() {
         return athlete;
     }
@@ -237,7 +239,7 @@ public class RideActivity {
     }
 
     public void setTimezone(String timezone) {
-        this.timezone = timezone;
+        this.timezone = parseTimezone(timezone);
     }
 
     public String getLocationCountry() {
@@ -341,7 +343,7 @@ public class RideActivity {
     }
 
     public void setMaxSpeed(double maxSpeed) {
-        this.maxSpeed =  metersPerSecondToKilometersPerHour(maxSpeed);
+        this.maxSpeed = metersPerSecondToKilometersPerHour(maxSpeed);
     }
 
     public double getAverageCadence() {
@@ -440,7 +442,25 @@ public class RideActivity {
         this.sufferScore = sufferScore;
     }
 
-    public double metersPerSecondToKilometersPerHour(double metersPerSecond) {
-        return (metersPerSecond*3600)/1000;
+    public String getBike() {
+        return athlete.getBikes().stream()
+                .filter(bike -> bike.getId().equals(gearId))
+                .map(Bike::getName)
+                .findFirst()
+                .orElse("Unknown");
+    }
+
+    private double metersPerSecondToKilometersPerHour(double metersPerSecond) {
+        return (metersPerSecond * 3600) / 1000;
+    }
+
+    private String parseTimezone(String timezone) {
+        String timeZonePattern = "GMT[+-]\\d{2}:\\d{2}";
+        Pattern pattern = Pattern.compile(timeZonePattern);
+        Matcher matcher = pattern.matcher(timezone);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return "GMT+00:00";
     }
 }

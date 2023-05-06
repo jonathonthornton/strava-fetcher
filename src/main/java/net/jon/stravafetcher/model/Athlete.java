@@ -48,24 +48,11 @@ public class Athlete {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "badge_type_id")
-    private int badgeTypeId;
-
-    @Column(name = "profile_medium")
-    private String profileMedium;
-
-    @Column(name = "profile")
-    private String profile;
-
     @Column(name = "follower_count")
     private int followerCount;
 
     @Column(name = "friend_count")
     private int friendCount;
-
-
-    @Column(name = "athlete_type")
-    private int athleteType;
 
     @Column(name = "date_preference")
     private String datePreference;
@@ -180,30 +167,6 @@ public class Athlete {
         this.updatedAt = LocalDateTime.parse(updatedAt, formatter);
     }
 
-    public int getBadgeTypeId() {
-        return badgeTypeId;
-    }
-
-    public void setBadgeTypeId(int badgeTypeId) {
-        this.badgeTypeId = badgeTypeId;
-    }
-
-    public String getProfileMedium() {
-        return profileMedium;
-    }
-
-    public void setProfileMedium(String profileMedium) {
-        this.profileMedium = profileMedium;
-    }
-
-    public String getProfile() {
-        return profile;
-    }
-
-    public void setProfile(String profile) {
-        this.profile = profile;
-    }
-
     public int getFollowerCount() {
         return followerCount;
     }
@@ -218,14 +181,6 @@ public class Athlete {
 
     public void setFriendCount(int friendCount) {
         this.friendCount = friendCount;
-    }
-
-    public int getAthleteType() {
-        return athleteType;
-    }
-
-    public void setAthleteType(int athleteType) {
-        this.athleteType = athleteType;
     }
 
     public String getDatePreference() {
@@ -283,12 +238,8 @@ public class Athlete {
                 ", premium=" + premium +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
-                ", badgeTypeId=" + badgeTypeId +
-                ", profileMedium='" + profileMedium + '\'' +
-                ", profile='" + profile + '\'' +
                 ", followerCount=" + followerCount +
                 ", friendCount=" + friendCount +
-                ", athleteType=" + athleteType +
                 ", datePreference='" + datePreference + '\'' +
                 ", measurementPreference='" + measurementPreference + '\'' +
                 ", ftp=" + ftp +
