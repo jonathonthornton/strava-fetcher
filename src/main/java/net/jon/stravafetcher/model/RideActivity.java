@@ -159,7 +159,7 @@ public class RideActivity {
         this.endLatLng = endLatLng;
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public ActivityMap getMap() {
         return map;
     }

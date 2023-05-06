@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 @RequestMapping("/fetch")
 public class FetchController {
     public static final int PER_PAGE = 100;
-    public static final int AFTER_YEAR = 2023;
+    public static final int AFTER_YEAR = 2022;
     private static final Logger log = LoggerFactory.getLogger(FetchController.class);
     @Autowired
     private AthleteRepository athleteRepository;
@@ -68,7 +68,6 @@ public class FetchController {
                     page,
                     PER_PAGE,
                     afterDateTime.toEpochSecond());
-            log.debug("Fetched {} activities", activities.size());
 
             if (activities.isEmpty()) {
                 break;
@@ -77,6 +76,7 @@ public class FetchController {
             activities.forEach(rideActivityRepository::save);
             page++;
             fetched += activities.size();
+            log.debug("Fetched {} activities", fetched);
         }
 
         log.debug("Fetched a total of {} activities", fetched);
