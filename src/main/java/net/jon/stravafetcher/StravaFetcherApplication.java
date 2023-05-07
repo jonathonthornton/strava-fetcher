@@ -17,4 +17,5 @@ public class StravaFetcherApplication {
     public CommandLineRunner run(StravaClient stravaClient) {
         return (args) -> stravaClient.fetchActivities();
     }
+
 }

@@ -1,9 +1,11 @@
 package net.jon.stravafetcher.controller;
 
 import net.jon.stravafetcher.model.Athlete;
+import net.jon.stravafetcher.model.CommentAuthor;
+import net.jon.stravafetcher.model.CommentAuthorRepository;
 import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.AthleteRepository;
-import net.jon.stravafetcher.repository.BikeRepository;
+import net.jon.stravafetcher.repository.CommentRepository;
 import net.jon.stravafetcher.repository.RideActivityRepository;
 import net.jon.stravafetcher.service.StravaService;
 import org.slf4j.Logger;
@@ -18,15 +20,17 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/fetch")
 public class FetchController {
     public static final int PER_PAGE = 100;
-    public static final int AFTER_YEAR = 2022;
+    public static final int AFTER_YEAR = 2023;
     private static final Logger log = LoggerFactory.getLogger(FetchController.class);
+    @Autowired
+    private CommentRepository commentRepository;
+    @Autowired
+    private CommentAuthorRepository commentAuthorRepository;
     @Autowired
     private AthleteRepository athleteRepository;
     @Autowired
@@ -73,7 +77,18 @@ public class FetchController {
                 break;
             }
 
-            activities.forEach(rideActivityRepository::save);
+            activities.forEach(activity -> {
+                rideActivityRepository.save(activity);
+                stravaService.getActivityComments(accessToken, activity.getId()).forEach(comment -> {
+                    CommentAuthor existingAuthor = commentAuthorRepository.findByFirstNameAndLastName(comment.getAthlete().getFirstName(), comment.getAthlete().getLastName());
+                    if (existingAuthor != null) {
+                        comment.setAthlete(existingAuthor);
+                    } else {
+                        comment.setAthlete(commentAuthorRepository.save(comment.getAthlete()));
+                    }
+                    commentRepository.save(comment);
+                });
+            });
             page++;
             fetched += activities.size();
             log.debug("Fetched {} activities", fetched);

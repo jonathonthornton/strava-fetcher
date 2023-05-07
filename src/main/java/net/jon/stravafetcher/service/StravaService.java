@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import net.jon.stravafetcher.model.Athlete;
+import net.jon.stravafetcher.model.Comment;
 import net.jon.stravafetcher.model.RideActivity;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,15 @@ public class StravaService {
                 .toUriString();
 
         return fetchData(url, accessToken, Athlete.class);
+    }
+
+    public List<Comment> getActivityComments(String accessToken, long activityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+                .path("/activities/" + activityId + "/comments")
+                .toUriString();
+
+        Comment[] comments = fetchData(url, accessToken, Comment[].class);
+        return Arrays.asList(comments != null ? comments : new Comment[0]);
     }
 
     private <T> T fetchData(String url, String accessToken, Class<T> responseType) {

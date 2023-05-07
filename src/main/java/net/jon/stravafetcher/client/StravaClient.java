@@ -1,13 +1,16 @@
 package net.jon.stravafetcher.client;
 
 import net.jon.stravafetcher.controller.FetchController;
+import net.jon.stravafetcher.repository.CommentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDateTime;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,8 +32,16 @@ public class StravaClient {
     @Autowired
     private FetchController fetchController;
 
+    @Autowired
+    private CommentRepository commentRepository;
+
     public void fetchActivities() {
         fetchController.fetchActivities(getAccessToken());
+        commentRepository.findTopCommenters(
+                LocalDateTime.now().minusYears(1),
+                PageRequest.of(0, 10)).forEach(commenter -> {
+            log.info("Top commenter: {}", commenter);
+        });
     }
 
     private String getAccessToken() {
