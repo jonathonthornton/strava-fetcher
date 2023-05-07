@@ -1,6 +1,6 @@
 package net.jon.stravafetcher.client;
 
-import net.jon.stravafetcher.controller.FetchController;
+import net.jon.stravafetcher.service.FetchService;
 import net.jon.stravafetcher.repository.CommentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,18 +30,21 @@ public class StravaClient {
     private String redirectUri;
 
     @Autowired
-    private FetchController fetchController;
+    private FetchService fetchService;
 
     @Autowired
     private CommentRepository commentRepository;
 
     public void fetchActivities() {
-        fetchController.fetchActivities(getAccessToken());
+        String accessToken = getAccessToken();
+        fetchService.fetchRecent(accessToken);
+        fetchService.fetchHistory(accessToken);
         commentRepository.findTopCommenters(
-                LocalDateTime.now().minusYears(1),
-                PageRequest.of(0, 10)).forEach(commenter -> {
-            log.info("Top commenter: {}", commenter);
-        });
+                        LocalDateTime.now().minusYears(1),
+                        PageRequest.of(0, 10))
+                .forEach(commenter -> {
+                    log.info("Top commenter: {}", commenter);
+                });
     }
 
     private String getAccessToken() {

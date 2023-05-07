@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -22,11 +23,9 @@ public class Comment {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumns({
-            @JoinColumn(name = "first_name", referencedColumnName = "first_name"),
-            @JoinColumn(name = "last_name", referencedColumnName = "last_name")
-    })
-    private CommentAuthor athlete;
+    @JoinColumn(name = "comment_author_id")
+    @JsonProperty("athlete")
+    private CommentAuthor commentAuthor;
 
     public long getId() {
         return id;
@@ -61,12 +60,12 @@ public class Comment {
         this.createdAt = LocalDateTime.parse(createdAt, formatter);
     }
 
-    public CommentAuthor getAthlete() {
-        return athlete;
+    public CommentAuthor getCommentAuthor() {
+        return commentAuthor;
     }
 
-    public void setAthlete(CommentAuthor athlete) {
-        this.athlete = athlete;
+    public void setCommentAuthor(CommentAuthor commentAuthor) {
+        this.commentAuthor = commentAuthor;
     }
 
     @Override
@@ -76,7 +75,7 @@ public class Comment {
                 ", activityId=" + activityId +
                 ", text='" + text + '\'' +
                 ", createdAt=" + createdAt +
-                ", athlete=" + athlete +
+                ", commentAuthor=" + commentAuthor +
                 '}';
     }
 }

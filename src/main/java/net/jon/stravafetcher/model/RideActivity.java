@@ -455,12 +455,20 @@ public class RideActivity {
     }
 
     private String parseTimezone(String timezone) {
-        String timeZonePattern = "GMT[+-]\\d{2}:\\d{2}";
+        String timeZonePattern = "[+-]\\d{2}:\\d{2}";
         Pattern pattern = Pattern.compile(timeZonePattern);
         Matcher matcher = pattern.matcher(timezone);
         if (matcher.find()) {
             return matcher.group();
         }
         return "GMT+00:00";
+    }
+
+    @Override
+    public String toString() {
+        return "RideActivity{" +
+                "name='" + name + '\'' +
+                ", startDateLocal=" + startDateLocal +
+                '}';
     }
 }

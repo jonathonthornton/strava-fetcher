@@ -1,6 +1,7 @@
 package net.jon.stravafetcher.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -21,11 +22,13 @@ public class Athlete {
     @Column(name = "resource_state")
     private int resourceState;
 
-    @Column(name = "firstname")
-    private String firstname;
+    @JsonProperty("firstname")
+    @Column(name = "first_name")
+    private String firstName;
 
-    @Column(name = "lastname")
-    private String lastname;
+    @JsonProperty("lastname")
+    @Column(name = "last_name")
+    private String lastName;
 
     @Column(name = "city")
     private String city;
@@ -93,20 +96,20 @@ public class Athlete {
         this.resourceState = resourceState;
     }
 
-    public String getFirstname() {
-        return firstname;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
-    public String getLastname() {
-        return lastname;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getCity() {
@@ -229,8 +232,8 @@ public class Athlete {
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", resourceState=" + resourceState +
-                ", firstname='" + firstname + '\'' +
-                ", lastname='" + lastname + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", country='" + country + '\'' +

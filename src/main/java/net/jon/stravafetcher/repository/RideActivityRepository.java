@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -29,5 +30,15 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     int countRidesLongerThan(@Param("minDistance") int minDistance);
 
     @Query(value = "SELECT * FROM strava.ride_activity ra WHERE ra.start_date_local = (SELECT MAX(ra2.start_date_local) FROM strava.ride_activity ra2)", nativeQuery = true)
-    RideActivity findMostRecentRideActivity();
+    RideActivity findNewestRideActivity();
+
+    @Query(value = "SELECT * FROM strava.ride_activity ra WHERE ra.start_date_local = (SELECT MIN(ra2.start_date_local) FROM strava.ride_activity ra2)", nativeQuery = true)
+    RideActivity findOldestRideActivity();
+
+    @Query("SELECT r FROM RideActivity r WHERE r.id NOT IN (SELECT DISTINCT c.activityId FROM Comment c)")
+    List<RideActivity> findActivitiesWithoutComments();
+
+    @Query("SELECT r FROM RideActivity r WHERE r.startDateLocal BETWEEN :after AND :before")
+    List<RideActivity> findActivitiesBetween(@Param("after") LocalDateTime after, @Param("before") LocalDateTime before);
+
 }

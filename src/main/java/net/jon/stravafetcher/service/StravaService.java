@@ -23,12 +23,13 @@ import java.util.List;
 public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
 
-    public List<RideActivity> getActivities(String accessToken, int page, int perPage, long after) {
+    public List<RideActivity> getActivities(String accessToken, int page, int perPage, long after, long before) {
         String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
                 .path("/athlete/activities")
                 .queryParam("page", page)
                 .queryParam("per_page", perPage)
                 .queryParam("after", after)
+                .queryParam("before", before)
                 .toUriString();
 
         RideActivity[] rideActivities = fetchData(url, accessToken, RideActivity[].class);
