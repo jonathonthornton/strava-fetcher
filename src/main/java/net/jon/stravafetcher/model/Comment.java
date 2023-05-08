@@ -23,9 +23,9 @@ public class Comment {
     private LocalDateTime createdAt;
 
     @ManyToOne
-    @JoinColumn(name = "comment_author_id")
+    @JoinColumn(name = "follower_id")
     @JsonProperty("athlete")
-    private CommentAuthor commentAuthor;
+    private Follower follower;
 
     public long getId() {
         return id;
@@ -60,12 +60,12 @@ public class Comment {
         this.createdAt = LocalDateTime.parse(createdAt, formatter);
     }
 
-    public CommentAuthor getCommentAuthor() {
-        return commentAuthor;
+    public Follower getFollower() {
+        return follower;
     }
 
-    public void setCommentAuthor(CommentAuthor commentAuthor) {
-        this.commentAuthor = commentAuthor;
+    public void setFollower(Follower follower) {
+        this.follower = follower;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class Comment {
                 ", activityId=" + activityId +
                 ", text='" + text + '\'' +
                 ", createdAt=" + createdAt +
-                ", commentAuthor=" + commentAuthor +
+                ", follower=" + follower +
                 '}';
     }
 }

@@ -3,9 +3,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "comment_author",
+@Table(name = "follower",
         uniqueConstraints = @UniqueConstraint(columnNames = {"first_name", "last_name"}))
-public class CommentAuthor {
+public class Follower {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

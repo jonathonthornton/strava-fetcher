@@ -1,14 +1,14 @@
 package net.jon.stravafetcher.dto;
 
-public class CommenterDTO {
+public class FollowerDTO {
     private String firstName;
     private String lastName;
-    private long numComments;
+    private long count;
 
-    public CommenterDTO(String firstName, String lastName, long numComments) {
+    public FollowerDTO(String firstName, String lastName, long numComments) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.numComments = numComments;
+        this.count = numComments;
     }
 
     public String getFirstName() {
@@ -27,21 +27,21 @@ public class CommenterDTO {
         this.lastName = lastName;
     }
 
-    public long getNumComments() {
-        return numComments;
+    public long getCount() {
+        return count;
     }
 
-    public void setNumComments(long numComments) {
-        this.numComments = numComments;
+    public void setCount(long count) {
+        this.count = count;
     }
 
     // toString method for debugging purposes
     @Override
     public String toString() {
-        return "CommenterDTO{" +
+        return "FollowerDTO{" +
                 "firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", numComments=" + numComments +
+                ", count=" + count +
                 '}';
     }
 }

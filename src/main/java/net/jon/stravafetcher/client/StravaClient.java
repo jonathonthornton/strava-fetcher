@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.client;
 
+import net.jon.stravafetcher.repository.KudosRepository;
 import net.jon.stravafetcher.service.FetchService;
 import net.jon.stravafetcher.repository.CommentRepository;
 import org.slf4j.Logger;
@@ -35,15 +36,24 @@ public class StravaClient {
     @Autowired
     private CommentRepository commentRepository;
 
+    @Autowired
+    private KudosRepository kudosRepository;
+
     public void fetchActivities() {
         String accessToken = getAccessToken();
-        fetchService.fetchRecent(accessToken);
-        fetchService.fetchHistory(accessToken);
+        fetchService.fetchRecent(accessToken, 1);
+        fetchService.fetchHistory(accessToken, 1);
         commentRepository.findTopCommenters(
                         LocalDateTime.now().minusYears(1),
                         PageRequest.of(0, 10))
                 .forEach(commenter -> {
                     log.info("Top commenter: {}", commenter);
+                });
+        kudosRepository.findTopKudosers(
+                        LocalDateTime.now().minusYears(1),
+                        PageRequest.of(0, 10))
+                .forEach(kudoser -> {
+                    log.info("Top kudoser: {}", kudoser);
                 });
     }
 

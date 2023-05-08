@@ -1,11 +1,9 @@
 package net.jon.stravafetcher.service;
 
-import net.jon.stravafetcher.model.Athlete;
-import net.jon.stravafetcher.model.CommentAuthor;
-import net.jon.stravafetcher.model.CommentAuthorRepository;
-import net.jon.stravafetcher.model.RideActivity;
+import net.jon.stravafetcher.model.*;
 import net.jon.stravafetcher.repository.AthleteRepository;
 import net.jon.stravafetcher.repository.CommentRepository;
+import net.jon.stravafetcher.repository.KudosRepository;
 import net.jon.stravafetcher.repository.RideActivityRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -26,34 +23,42 @@ public class FetchService {
     @Autowired
     private CommentRepository commentRepository;
     @Autowired
-    private CommentAuthorRepository commentAuthorRepository;
+    private FollowerRepository followerRepository;
     @Autowired
     private AthleteRepository athleteRepository;
     @Autowired
     private RideActivityRepository rideActivityRepository;
     @Autowired
+    private KudosRepository kudosRepository;
+    @Autowired
     private StravaService stravaService;
 
     private static final Logger log = LoggerFactory.getLogger(FetchService.class);
 
-    public void fetchRecent(String accessToken) {
+    public void fetchRecent(String accessToken, int months) {
         ZonedDateTime before = ZonedDateTime.now();
-        ZonedDateTime after = before.minus(2, ChronoUnit.WEEKS);
+        ZonedDateTime after = before.minus(months, ChronoUnit.MONTHS);
         fetchAll(accessToken, after, before);
     }
 
-    public void fetchHistory(String accessToken) {
+    public void fetchHistory(String accessToken, int months) {
         RideActivity rideActivity = rideActivityRepository.findOldestRideActivity();
         ZoneOffset zoneOffset = ZoneOffset.of(rideActivity.getTimezone());
         ZonedDateTime before = rideActivity.getStartDateLocal().atOffset(zoneOffset).toZonedDateTime();
-        ZonedDateTime after = before.minus(2, ChronoUnit.WEEKS);
-        fetchAll(accessToken, after, before);
+        ZonedDateTime after = before.minus(months, ChronoUnit.MONTHS);
+        ZonedDateTime januaryFirst2010 = ZonedDateTime.of(2010, 1, 1, 0, 0, 0, 0, zoneOffset);
+        if (after.isAfter(januaryFirst2010)) {
+            fetchAll(accessToken, after, before);
+        } else {
+            log.info("No more activities to fetch.");
+        }
     }
 
     private void fetchAll(String accessToken, ZonedDateTime after, ZonedDateTime before) {
         log.debug("Fetching all activities between {} and {}", after, before);
         fetchAthlete(accessToken);
         fetchActivities(accessToken, after, before);
+        fetchKudos(accessToken, after.toLocalDateTime(), before.toLocalDateTime());
         fetchComments(accessToken, after.toLocalDateTime(), before.toLocalDateTime());
     }
 
@@ -67,7 +72,6 @@ public class FetchService {
     }
 
     private void fetchActivities(String accessToken, ZonedDateTime after, ZonedDateTime before) {
-        log.info("Fetching activities between {} and {}", after, before);
         int page = 1;
         int fetched = 0;
         int activitiesCount;
@@ -97,11 +101,23 @@ public class FetchService {
         rideActivityRepository.findActivitiesBetween(after, before).forEach(activity -> {
             log.debug("Fetching comments for activity {}", activity);
             stravaService.getActivityComments(accessToken, activity.getId()).forEach(comment -> {
-                CommentAuthor existingAuthor = commentAuthorRepository.findByFirstNameAndLastName(comment.getCommentAuthor().getFirstName(), comment.getCommentAuthor().getLastName());
-                comment.setCommentAuthor(Objects.requireNonNullElseGet(existingAuthor, () -> commentAuthorRepository.save(comment.getCommentAuthor())));
+                Follower existingFollower = followerRepository.findByFirstNameAndLastName(comment.getFollower().getFirstName(), comment.getFollower().getLastName());
+                comment.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(comment.getFollower())));
                 commentRepository.save(comment);
             });
         });
     }
 
+    public void fetchKudos(String accessToken,LocalDateTime after, LocalDateTime before) {
+        rideActivityRepository.findActivitiesBetween(after, before).forEach(activity -> {
+            log.debug("Fetching kudos for activity {}", activity);
+            stravaService.getActivityKudos(accessToken, activity.getId()).forEach(follower -> {
+                Kudos kudos = new Kudos();
+                kudos.setActivityId(activity.getId());
+                Follower existingFollower = followerRepository.findByFirstNameAndLastName(follower.getFirstName(), follower.getLastName());
+                kudos.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(follower)));
+                kudosRepository.save(kudos);
+            });
+        });
+    }
 }
