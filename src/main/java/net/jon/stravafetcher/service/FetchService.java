@@ -1,10 +1,7 @@
 package net.jon.stravafetcher.service;
 
 import net.jon.stravafetcher.model.*;
-import net.jon.stravafetcher.repository.AthleteRepository;
-import net.jon.stravafetcher.repository.CommentRepository;
-import net.jon.stravafetcher.repository.KudosRepository;
-import net.jon.stravafetcher.repository.RideActivityRepository;
+import net.jon.stravafetcher.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

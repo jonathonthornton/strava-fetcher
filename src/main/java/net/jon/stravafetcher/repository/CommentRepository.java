@@ -13,7 +13,8 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT new net.jon.stravafetcher.dto.FollowerDTO(c.follower.firstName, c.follower.lastName, COUNT(c)) " +
             "FROM Comment c " +
-            "WHERE c.createdAt >= :dateFrom " +
+            "JOIN RideActivity a ON a.id = c.activityId " +
+            "WHERE a.startDateLocal >= :dateFrom " +
             "GROUP BY c.follower.firstName, c.follower.lastName " +
             "ORDER BY COUNT(c) DESC")
     List<FollowerDTO> findTopCommenters(@Param("dateFrom") LocalDateTime dateFrom, Pageable pageable);
