@@ -1,71 +1,79 @@
 package net.jon.stravafetcher.service;
 
-import net.jon.stravafetcher.model.*;
+import net.jon.stravafetcher.model.Athlete;
+import net.jon.stravafetcher.model.Follower;
+import net.jon.stravafetcher.model.Kudos;
+import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 public class FetchService {
-    public static final int PER_PAGE = 100;
-    @Autowired
-    private CommentRepository commentRepository;
-    @Autowired
-    private FollowerRepository followerRepository;
-    @Autowired
-    private AthleteRepository athleteRepository;
-    @Autowired
-    private RideActivityRepository rideActivityRepository;
-    @Autowired
-    private KudosRepository kudosRepository;
-    @Autowired
-    private StravaService stravaService;
-
+    private static final int PER_PAGE = 100;
+    private final CommentRepository commentRepository;
+    private final FollowerRepository followerRepository;
+    private final AthleteRepository athleteRepository;
+    private final RideActivityRepository rideActivityRepository;
+    private final KudosRepository kudosRepository;
+    private final StravaService stravaService;
     private static final Logger log = LoggerFactory.getLogger(FetchService.class);
+    private static final String MELBOURNE_TIMEZONE = "Australia/Melbourne";
 
-    public void fetchRecent(String accessToken, int months) {
-        ZonedDateTime before = ZonedDateTime.now();
-        ZonedDateTime after = before.minus(months, ChronoUnit.MONTHS);
-        fetchAll(accessToken, after, before);
+    public FetchService(
+            CommentRepository commentRepository,
+            FollowerRepository followerRepository,
+            AthleteRepository athleteRepository,
+            RideActivityRepository rideActivityRepository,
+            KudosRepository kudosRepository,
+            StravaService stravaService) {
+        this.commentRepository = commentRepository;
+        this.followerRepository = followerRepository;
+        this.athleteRepository = athleteRepository;
+        this.rideActivityRepository = rideActivityRepository;
+        this.kudosRepository = kudosRepository;
+        this.stravaService = stravaService;
     }
 
-    public void fetchHistory(String accessToken, int months) {
-        RideActivity rideActivity = rideActivityRepository.findOldestRideActivity();
-        ZoneOffset zoneOffset = ZoneOffset.of(rideActivity.getTimezone());
-        ZonedDateTime before = rideActivity.getStartDateLocal().atOffset(zoneOffset).toZonedDateTime();
-        ZonedDateTime after = before.minus(months, ChronoUnit.MONTHS);
-        ZonedDateTime januaryFirst2010 = ZonedDateTime.of(2010, 1, 1, 0, 0, 0, 0, zoneOffset);
-        if (after.isAfter(januaryFirst2010)) {
-            fetchAll(accessToken, after, before);
-        } else {
-            log.info("No more activities to fetch.");
-        }
-    }
-
-    private void fetchAll(String accessToken, ZonedDateTime after, ZonedDateTime before) {
-        log.debug("Fetching all activities between {} and {}", after, before);
-        fetchAthlete(accessToken);
-        fetchActivities(accessToken, after, before);
-        fetchKudos(accessToken, after.toLocalDateTime(), before.toLocalDateTime());
-        fetchComments(accessToken, after.toLocalDateTime(), before.toLocalDateTime());
-    }
-
-    private void fetchAthlete(String accessToken) {
+    public void fetchAthlete(String accessToken) {
         Athlete athlete = stravaService.getAthlete(accessToken);
         log.debug("Fetched athlete {}", athlete);
         athlete.getBikes().forEach(bike -> {
             bike.setAthlete(athlete);
         });
         athleteRepository.save(athlete);
+    }
+
+    public void fetchAll(String accessToken, int afterYear, int afterMonth, int beforeYear, int beforeMonth) {
+        fetchAthlete(accessToken);
+        fetchActivities(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
+        fetchKudos(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
+        fetchComments(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
+    }
+
+    public void fetchActivities(String accessToken, int afterYear, int afterMonth, int beforeYear, int beforeMonth) {
+        ZonedDateTime after = ZonedDateTime.of(afterYear, afterMonth, 1, 0, 0, 0, 0, ZoneId.of(MELBOURNE_TIMEZONE));
+        ZonedDateTime before = ZonedDateTime.of(beforeYear, beforeMonth, 1, 0, 0, 0, 0, ZoneId.of(MELBOURNE_TIMEZONE));
+        fetchActivities(accessToken, after, before);
+    }
+
+    public void fetchKudos(String accessToken, int afterYear, int afterMonth, int beforeYear, int beforeMonth) {
+        ZonedDateTime after = ZonedDateTime.of(afterYear, afterMonth, 1, 0, 0, 0, 0, ZoneId.of(MELBOURNE_TIMEZONE));
+        ZonedDateTime before = ZonedDateTime.of(beforeYear, beforeMonth, 1, 0, 0, 0, 0, ZoneId.of(MELBOURNE_TIMEZONE));
+        fetchKudos(accessToken, after.toLocalDateTime(), before.toLocalDateTime());
+    }
+
+    public void fetchComments(String accessToken, int afterYear, int afterMonth, int beforeYear, int beforeMonth) {
+        ZonedDateTime after = ZonedDateTime.of(afterYear, afterMonth, 1, 0, 0, 0, 0, ZoneId.of(MELBOURNE_TIMEZONE));
+        ZonedDateTime before = ZonedDateTime.of(beforeYear, beforeMonth, 1, 0, 0, 0, 0, ZoneId.of(MELBOURNE_TIMEZONE));
+        fetchComments(accessToken, after.toLocalDateTime(), before.toLocalDateTime());
     }
 
     private void fetchActivities(String accessToken, ZonedDateTime after, ZonedDateTime before) {
@@ -94,18 +102,7 @@ public class FetchService {
         log.debug("Fetched a total of {} activities", fetched);
     }
 
-    public void fetchComments(String accessToken, LocalDateTime after, LocalDateTime before) {
-        rideActivityRepository.findActivitiesBetween(after, before).forEach(activity -> {
-            log.debug("Fetching comments for activity {}", activity);
-            stravaService.getActivityComments(accessToken, activity.getId()).forEach(comment -> {
-                Follower existingFollower = followerRepository.findByFirstNameAndLastName(comment.getFollower().getFirstName(), comment.getFollower().getLastName());
-                comment.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(comment.getFollower())));
-                commentRepository.save(comment);
-            });
-        });
-    }
-
-    public void fetchKudos(String accessToken,LocalDateTime after, LocalDateTime before) {
+    private void fetchKudos(String accessToken,LocalDateTime after, LocalDateTime before) {
         rideActivityRepository.findActivitiesBetween(after, before).forEach(activity -> {
             log.debug("Fetching kudos for activity {}", activity);
             stravaService.getActivityKudos(accessToken, activity.getId()).forEach(follower -> {
@@ -114,6 +111,17 @@ public class FetchService {
                 Follower existingFollower = followerRepository.findByFirstNameAndLastName(follower.getFirstName(), follower.getLastName());
                 kudos.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(follower)));
                 kudosRepository.save(kudos);
+            });
+        });
+    }
+
+    private void fetchComments(String accessToken, LocalDateTime after, LocalDateTime before) {
+        rideActivityRepository.findActivitiesBetween(after, before).forEach(activity -> {
+            log.debug("Fetching comments for activity {}", activity);
+            stravaService.getActivityComments(accessToken, activity.getId()).forEach(comment -> {
+                Follower existingFollower = followerRepository.findByFirstNameAndLastName(comment.getFollower().getFirstName(), comment.getFollower().getLastName());
+                comment.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(comment.getFollower())));
+                commentRepository.save(comment);
             });
         });
     }

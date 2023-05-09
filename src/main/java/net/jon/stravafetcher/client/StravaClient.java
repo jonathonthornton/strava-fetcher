@@ -5,7 +5,6 @@ import net.jon.stravafetcher.service.FetchService;
 import net.jon.stravafetcher.repository.CommentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,37 +22,46 @@ public class StravaClient {
     private static final Logger log = LoggerFactory.getLogger(StravaClient.class);
     @Value("${strava.client.id}")
     private String clientId;
-
     @Value("${strava.client.secret}")
     private String clientSecret;
-
     @Value("${strava.redirect.uri}")
     private String redirectUri;
+    private final FetchService fetchService;
+    private final KudosRepository kudosRepository;
+    private final CommentRepository commentRepository;
 
-    @Autowired
-    private FetchService fetchService;
-
-    @Autowired
-    private CommentRepository commentRepository;
-
-    @Autowired
-    private KudosRepository kudosRepository;
+    public StravaClient(FetchService fetchService, CommentRepository commentRepository, KudosRepository kudosRepository) {
+        this.fetchService = fetchService;
+        this.commentRepository = commentRepository;
+        this.kudosRepository = kudosRepository;
+    }
 
     public void fetchActivities() {
         String accessToken = getAccessToken();
-        fetchService.fetchRecent(accessToken, 1);
-        fetchService.fetchHistory(accessToken, 1);
-        commentRepository.findTopCommenters(
-                        LocalDateTime.now().minusYears(1),
-                        PageRequest.of(0, 10))
-                .forEach(commenter -> {
-                    log.info("Top commenter: {}", commenter);
-                });
+        fetchService.fetchAthlete(accessToken);
+        fetchService.fetchActivities(accessToken, 2023, 1,2023, 6);
+        fetchService.fetchKudos(accessToken, 2023, 2,2023, 6);
+        fetchService.fetchComments(accessToken, 2023, 5,2023, 6);
+
         kudosRepository.findTopKudosers(
                         LocalDateTime.now().minusYears(1),
                         PageRequest.of(0, 10))
-                .forEach(kudoser -> {
-                    log.info("Top kudoser: {}", kudoser);
+                .forEach(follower -> {
+                    log.info("Top kudoser: {}", follower);
+                });
+
+        kudosRepository.findBottomKudosers(
+                        LocalDateTime.now().minusYears(1),
+                        PageRequest.of(0, 10))
+                .forEach(follower -> {
+                    log.info("Bottom kudoser: {}", follower);
+                });
+
+        commentRepository.findTopCommenters(
+                        LocalDateTime.now().minusYears(1),
+                        PageRequest.of(0, 10))
+                .forEach(follower -> {
+                    log.info("Top commenter: {}", follower);
                 });
     }
 
