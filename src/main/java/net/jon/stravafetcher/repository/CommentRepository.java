@@ -2,6 +2,7 @@ package net.jon.stravafetcher.repository;
 
 import net.jon.stravafetcher.dto.FollowerDTO;
 import net.jon.stravafetcher.model.Comment;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,5 +18,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "WHERE a.startDateLocal >= :dateFrom " +
             "GROUP BY c.follower.firstName, c.follower.lastName " +
             "ORDER BY COUNT(c) DESC")
-    List<FollowerDTO> findTopCommenters(@Param("dateFrom") LocalDateTime dateFrom, Pageable pageable);
+    Page<FollowerDTO> findTopCommenters(@Param("dateFrom") LocalDateTime dateFrom, Pageable pageable);
 }

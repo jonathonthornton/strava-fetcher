@@ -24,9 +24,13 @@ public class FetchController {
         fetchService.fetchAthlete(accessToken);
     }
 
-    @GetMapping("/activities/{accessToken}")
-    public void fetchActivities(@PathVariable String accessToken) {
-        fetchService.fetchActivities(accessToken);
+    @GetMapping("/activities/recent/{accessToken}")
+    public void fetchRecentActivities(@PathVariable String accessToken) {
+        fetchService.fetchRecentActivities(accessToken);
+    }
+    @GetMapping("/activities/older/{accessToken}")
+    public void fetchOlderActivities(@PathVariable String accessToken) {
+        fetchService.fetchOlderActivities(accessToken);
     }
 
     @GetMapping("/kudos/{accessToken}")
