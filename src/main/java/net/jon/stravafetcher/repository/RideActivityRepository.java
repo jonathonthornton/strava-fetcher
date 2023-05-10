@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RideActivityRepository extends JpaRepository<RideActivity, Long> {
@@ -33,7 +34,7 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     RideActivity findNewestRideActivity();
 
     @Query(value = "SELECT * FROM strava.ride_activity ra WHERE ra.start_date_local = (SELECT MIN(ra2.start_date_local) FROM strava.ride_activity ra2)", nativeQuery = true)
-    RideActivity findOldestRideActivity();
+    Optional<RideActivity> findOldestRideActivity();
 
     @Query("SELECT r FROM RideActivity r WHERE r.id NOT IN (SELECT DISTINCT c.activityId FROM Comment c)")
     List<RideActivity> findActivitiesWithoutComments();
@@ -41,4 +42,19 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     @Query("SELECT r FROM RideActivity r WHERE r.startDateLocal BETWEEN :after AND :before")
     List<RideActivity> findActivitiesBetween(@Param("after") LocalDateTime after, @Param("before") LocalDateTime before);
 
+    @Query("SELECT r " +
+            "FROM RideActivity r " +
+            "LEFT JOIN Kudos k ON r.id = k.activityId " +
+            "WHERE r.isPrivate = false " +
+            "GROUP BY r.id " +
+            "HAVING COUNT(k) < r.kudosCount - 3") // Allow for name collisions.
+    List<RideActivity> findPublicActivitiesWithMismatchedKudosCounts();
+
+    @Query("SELECT r " +
+            "FROM RideActivity r " +
+            "LEFT JOIN Comment c ON r.id = c.activityId " +
+            "WHERE r.isPrivate = false " +
+            "GROUP BY r.id " +
+            "HAVING COUNT(c) < r.commentCount - 3") // Allow for name collisions.
+    List<RideActivity> findPublicActivitiesWithMismatchedCommentCounts();
 }

@@ -20,27 +20,22 @@ public class FetchController {
     }
 
     @GetMapping("/athlete/{accessToken}")
-    public void fetchActivities(@PathVariable String accessToken) {
+    public void fetchAthlete(@PathVariable String accessToken) {
         fetchService.fetchAthlete(accessToken);
     }
 
-    @GetMapping("/all/{accessToken}/{afterYear}/{afterMonth}/{beforeYear}/{beforeMonth}")
-    public void fetchAll(@PathVariable String accessToken, @PathVariable int afterYear, @PathVariable int afterMonth, @PathVariable int beforeYear, @PathVariable int beforeMonth) {
-        fetchService.fetchAll(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
+    @GetMapping("/activities/{accessToken}")
+    public void fetchActivities(@PathVariable String accessToken) {
+        fetchService.fetchActivities(accessToken);
     }
 
-    @GetMapping("/activities/{accessToken}/{afterYear}/{afterMonth}/{beforeYear}/{beforeMonth}")
-    public void fetchActivities(@PathVariable String accessToken, @PathVariable int afterYear, @PathVariable int afterMonth, @PathVariable int beforeYear, @PathVariable int beforeMonth) {
-        fetchService.fetchActivities(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
+    @GetMapping("/kudos/{accessToken}")
+    public void fetchKudos(@PathVariable String accessToken) {
+        fetchService.fetchKudos(accessToken);
     }
 
-    @GetMapping("/kudos/{accessToken}/{afterYear}/{afterMonth}/{beforeYear}/{beforeMonth}")
-    public void fetchKudos(@PathVariable String accessToken, @PathVariable int afterYear, @PathVariable int afterMonth, @PathVariable int beforeYear, @PathVariable int beforeMonth) {
-        fetchService.fetchKudos(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
-    }
-
-    @GetMapping("/comments/{accessToken}/{afterYear}/{afterMonth}/{beforeYear}/{beforeMonth}")
-    public void fetchComments(@PathVariable String accessToken, @PathVariable int afterYear, @PathVariable int afterMonth, @PathVariable int beforeYear, @PathVariable int beforeMonth) {
-        fetchService.fetchComments(accessToken, afterYear, afterMonth, beforeYear, beforeMonth);
+    @GetMapping("/comments/{accessToken}")
+    public void fetchComments(@PathVariable String accessToken) {
+        fetchService.fetchComments(accessToken);
     }
 }

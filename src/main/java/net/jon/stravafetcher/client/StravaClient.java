@@ -39,9 +39,9 @@ public class StravaClient {
     public void fetchActivities() {
         String accessToken = getAccessToken();
         fetchService.fetchAthlete(accessToken);
-        fetchService.fetchActivities(accessToken, 2023, 1,2023, 6);
-        fetchService.fetchKudos(accessToken, 2023, 2,2023, 6);
-        fetchService.fetchComments(accessToken, 2023, 5,2023, 6);
+        fetchService.fetchActivities(accessToken);
+        fetchService.fetchKudos(accessToken);
+        fetchService.fetchComments(accessToken);
 
         kudosRepository.findTopKudosers(
                         LocalDateTime.now().minusYears(1),
