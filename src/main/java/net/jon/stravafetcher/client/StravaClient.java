@@ -4,6 +4,7 @@ import net.jon.stravafetcher.model.OAuthToken;
 import net.jon.stravafetcher.repository.KudosRepository;
 import net.jon.stravafetcher.service.FetchService;
 import net.jon.stravafetcher.repository.CommentRepository;
+import net.jon.stravafetcher.service.StravaOAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;

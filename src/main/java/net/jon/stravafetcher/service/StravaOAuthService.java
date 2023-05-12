@@ -1,4 +1,4 @@
-package net.jon.stravafetcher.client;
+package net.jon.stravafetcher.service;
 
 import net.jon.stravafetcher.model.OAuthToken;
 import net.jon.stravafetcher.repository.OAuthTokenRepository;
@@ -15,7 +15,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.Optional;
 
 @Service

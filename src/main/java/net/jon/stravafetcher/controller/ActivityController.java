@@ -1,6 +1,6 @@
 package net.jon.stravafetcher.controller;
 
-import net.jon.stravafetcher.client.mapper.RideActivityMapper;
+import net.jon.stravafetcher.mapper.RideActivityMapper;
 import net.jon.stravafetcher.dto.RideActivityDTO;
 import net.jon.stravafetcher.repository.RideActivityRepository;
 import net.jon.stravafetcher.service.EddingtonNumberService;

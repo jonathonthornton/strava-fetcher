@@ -1,4 +1,4 @@
-package net.jon.stravafetcher.client.mapper;
+package net.jon.stravafetcher.mapper;
 
 import net.jon.stravafetcher.dto.RideActivityDTO;
 import net.jon.stravafetcher.model.RideActivity;
