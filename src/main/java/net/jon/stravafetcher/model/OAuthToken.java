@@ -1,19 +1,38 @@
-package net.jon.stravafetcher.client;
+package net.jon.stravafetcher.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 
-public class OAuthTokenResponse {
+@Entity
+@Table(name = "oauth_token")
+public class OAuthToken {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @Column(name = "access_token")
     @JsonProperty("access_token")
     private String accessToken;
 
+    @Column(name = "refresh_token")
     @JsonProperty("refresh_token")
     private String refreshToken;
 
+    @Column(name = "expires_at")
     @JsonProperty("expires_at")
     private long expiresAt;
 
+    @Column(name = "expires_in")
     @JsonProperty("expires_in")
     private int expiresIn;
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
 
     public String getAccessToken() {
         return accessToken;

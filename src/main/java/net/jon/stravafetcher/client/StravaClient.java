@@ -1,85 +1,82 @@
 package net.jon.stravafetcher.client;
 
+import net.jon.stravafetcher.model.OAuthToken;
 import net.jon.stravafetcher.repository.KudosRepository;
 import net.jon.stravafetcher.service.FetchService;
 import net.jon.stravafetcher.repository.CommentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
 public class StravaClient {
-    private static final String STRAVA_AUTHORIZE_URL = "https://www.strava.com/oauth/authorize";
-    private static final String AUTHORIZATION_SCOPE = "activity:read,activity:read_all,profile:read_all";
+
     private static final Logger log = LoggerFactory.getLogger(StravaClient.class);
-    @Value("${strava.client.id}")
-    private String clientId;
-    @Value("${strava.client.secret}")
-    private String clientSecret;
-    @Value("${strava.redirect.uri}")
-    private String redirectUri;
+    private final StravaOAuthService stravaOAuthService;
     private final FetchService fetchService;
     private final KudosRepository kudosRepository;
     private final CommentRepository commentRepository;
 
-    public StravaClient(FetchService fetchService, CommentRepository commentRepository, KudosRepository kudosRepository) {
+    public StravaClient(StravaOAuthService stravaOAuthService, FetchService fetchService, CommentRepository commentRepository, KudosRepository kudosRepository){
+        this.stravaOAuthService = stravaOAuthService;
         this.fetchService = fetchService;
         this.commentRepository = commentRepository;
         this.kudosRepository = kudosRepository;
     }
 
     public void fetchActivities() {
-        String accessToken = getAccessToken();
-        fetchService.fetchAthlete(accessToken);
-        fetchService.fetchRecentActivities(accessToken);
-        fetchService.fetchKudos(accessToken);
-        fetchService.fetchComments(accessToken);
+        Optional<OAuthToken> oAuthToken = getOAuthToken();
+        if (oAuthToken.isPresent()) {
+            String accessToken = oAuthToken.get().getAccessToken();
+            fetchService.fetchAthlete(accessToken);
+            fetchService.fetchRecentActivities(accessToken);
+            fetchService.fetchKudos(accessToken);
+            fetchService.fetchComments(accessToken);
 
-        kudosRepository.findTopKudosers(
-                        LocalDateTime.now().minusYears(1),
-                        PageRequest.of(0, 10))
-                .forEach(follower -> {
-                    log.info("Top kudoser: {}", follower);
-                });
+            kudosRepository.findTopKudosers(
+                            LocalDateTime.now().minusYears(1),
+                            PageRequest.of(0, 10))
+                    .forEach(follower -> {
+                        log.info("Top kudoser: {}", follower);
+                    });
 
-        kudosRepository.findBottomKudosers(
-                        LocalDateTime.now().minusYears(1),
-                        PageRequest.of(0, 10))
-                .forEach(follower -> {
-                    log.info("Bottom kudoser: {}", follower);
-                });
+            kudosRepository.findBottomKudosers(
+                            LocalDateTime.now().minusYears(1),
+                            PageRequest.of(0, 10))
+                    .forEach(follower -> {
+                        log.info("Bottom kudoser: {}", follower);
+                    });
 
-        commentRepository.findTopCommenters(
-                        LocalDateTime.now().minusYears(1),
-                        PageRequest.of(0, 10))
-                .forEach(follower -> {
-                    log.info("Top commenter: {}", follower);
-                });
+            commentRepository.findTopCommenters(
+                            LocalDateTime.now().minusYears(1),
+                            PageRequest.of(0, 10))
+                    .forEach(follower -> {
+                        log.info("Top commenter: {}", follower);
+                    });
+        }
     }
 
-    private String getAccessToken() {
-        String authorizationUrl = buildAuthorizationUrl();
-        String authorizationCode = getAuthorizationCode(authorizationUrl);
-        StravaOAuthService stravaOAuthService = new StravaOAuthService(clientId, clientSecret, redirectUri);
-        OAuthTokenResponse tokenResponse = stravaOAuthService.getAccessToken(authorizationCode);
-        return tokenResponse.getAccessToken();
-    }
-
-    private String buildAuthorizationUrl() {
-        return UriComponentsBuilder.fromHttpUrl(STRAVA_AUTHORIZE_URL)
-                .queryParam("client_id", clientId)
-                .queryParam("response_type", "code")
-                .queryParam("redirect_uri", redirectUri)
-                .queryParam("scope", AUTHORIZATION_SCOPE)
-                .toUriString();
+    private Optional<OAuthToken> getOAuthToken() {
+        Optional<OAuthToken> oAuthToken = stravaOAuthService.readOAuthToken();
+        if (oAuthToken.isPresent() && stravaOAuthService.isTokenCurrent()) {
+            log.info("Token found and is current");
+        } else if (oAuthToken.isPresent()) {
+            log.info("Token found but is not current. Refreshing token...");
+            oAuthToken = stravaOAuthService.refreshToken(oAuthToken.get().getRefreshToken());
+        } else {
+            log.debug("No token found. Requesting a new one...");
+            String authorizationUrl = stravaOAuthService.getAuthorizationUrl();
+            String authorizationCode = getAuthorizationCode(authorizationUrl);
+            oAuthToken = stravaOAuthService.getOAuthToken(authorizationCode);
+        }
+        return oAuthToken;
     }
 
     private String getAuthorizationCode(String authorizationUrl) {

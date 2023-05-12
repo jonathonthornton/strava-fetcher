@@ -7,22 +7,22 @@ import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.Comment;
 import net.jon.stravafetcher.model.Follower;
 import net.jon.stravafetcher.model.RideActivity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalField;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
+    private static final Logger log = LoggerFactory.getLogger(StravaService.class);
 
     public List<RideActivity> getActivities(String accessToken, int page, int perPage, long after, long before) {
         String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
@@ -81,12 +81,18 @@ public class StravaService {
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> rawJsonResponse = null;
 
-        ResponseEntity<String> rawJsonResponse = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                request,
-                String.class);
+        try {
+            rawJsonResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    request,
+                    String.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to fetch data from URL {}. HTTP Status Code: {}. Response Body: {}", url, e.getStatusCode(), e.getResponseBodyAsString());
+            return null;
+        }
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -96,7 +102,7 @@ public class StravaService {
         try {
             result = objectMapper.readValue(rawJsonResponse.getBody(), responseType);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed to parse the fetched data: ", e);
         }
 
         return result;
