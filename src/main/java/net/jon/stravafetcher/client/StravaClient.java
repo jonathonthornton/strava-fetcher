@@ -38,6 +38,7 @@ public class StravaClient {
             String accessToken = oAuthToken.get().getAccessToken();
             fetchService.fetchAthlete(accessToken);
             fetchService.fetchRecentActivities(accessToken);
+//            fetchService.fetchAllActivities(accessToken);
             fetchService.fetchKudos(accessToken);
             fetchService.fetchComments(accessToken);
 

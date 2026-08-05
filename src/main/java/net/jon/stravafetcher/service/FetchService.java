@@ -18,7 +18,7 @@ import java.util.Objects;
 @Service
 public class FetchService {
     private static final int PER_PAGE = 100;
-    private static final int MONTHS_TO_FETCH = 1;
+    private static final int MONTHS_TO_FETCH = 6;
     private static final int MAX_FETCHES = 5;
     private static final Logger log = LoggerFactory.getLogger(FetchService.class);
     private final CommentRepository commentRepository;
