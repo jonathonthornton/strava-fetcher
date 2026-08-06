@@ -7,6 +7,7 @@ import net.jon.stravafetcher.repository.CommentRepository;
 import net.jon.stravafetcher.service.StravaOAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,15 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Interactive, console-based authorization flow for local development.
+ * Not wired up in the cloud, since there's no stdin to read the redirect
+ * from there — see StravaOAuthCallbackController for that flow, and
+ * StravaSyncScheduler for the automated sync that replaces this class's
+ * fetchActivities() in production.
+ */
 @Service
+@Profile("local")
 public class StravaClient {
 
     private static final Logger log = LoggerFactory.getLogger(StravaClient.class);

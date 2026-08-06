@@ -3,6 +3,8 @@ package net.jon.stravafetcher.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import net.jon.stravafetcher.client.StravaRateLimiter;
+import net.jon.stravafetcher.exception.StravaRateLimitException;
 import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.Comment;
 import net.jon.stravafetcher.model.Follower;
@@ -16,13 +18,21 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class StravaService {
     private static final String STRAVA_API_BASE_URL = "https://www.strava.com/api/v3";
+    private static final Duration DEFAULT_RETRY_AFTER = Duration.ofMinutes(15);
     private static final Logger log = LoggerFactory.getLogger(StravaService.class);
+
+    private final StravaRateLimiter rateLimiter;
+
+    public StravaService(StravaRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
 
     public List<RideActivity> getActivities(String accessToken, int page, int perPage, long after, long before) {
         String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
@@ -81,7 +91,7 @@ public class StravaService {
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> rawJsonResponse = null;
+        ResponseEntity<String> rawJsonResponse;
 
         try {
             rawJsonResponse = restTemplate.exchange(
@@ -89,10 +99,17 @@ public class StravaService {
                     HttpMethod.GET,
                     request,
                     String.class);
+        } catch (HttpClientErrorException.TooManyRequests e) {
+            rateLimiter.updateFromHeaders(e.getResponseHeaders());
+            Duration retryAfter = parseRetryAfter(e.getResponseHeaders());
+            rateLimiter.markRateLimited(retryAfter);
+            throw new StravaRateLimitException(retryAfter);
         } catch (HttpClientErrorException e) {
             log.error("Failed to fetch data from URL {}. HTTP Status Code: {}. Response Body: {}", url, e.getStatusCode(), e.getResponseBodyAsString());
             return null;
         }
+
+        rateLimiter.updateFromHeaders(rawJsonResponse.getHeaders());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -106,5 +123,17 @@ public class StravaService {
         }
 
         return result;
+    }
+
+    private Duration parseRetryAfter(HttpHeaders headers) {
+        String retryAfter = headers != null ? headers.getFirst(HttpHeaders.RETRY_AFTER) : null;
+        if (retryAfter != null) {
+            try {
+                return Duration.ofSeconds(Long.parseLong(retryAfter));
+            } catch (NumberFormatException ignored) {
+                // fall through to default
+            }
+        }
+        return DEFAULT_RETRY_AFTER;
     }
 }

@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.service;
 
+import net.jon.stravafetcher.client.StravaRateLimiter;
 import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.Follower;
 import net.jon.stravafetcher.model.Kudos;
@@ -14,12 +15,12 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class FetchService {
     private static final int PER_PAGE = 100;
     private static final int MONTHS_TO_FETCH = 6;
-    private static final int MAX_FETCHES = 5;
     private static final Logger log = LoggerFactory.getLogger(FetchService.class);
     private final CommentRepository commentRepository;
     private final FollowerRepository followerRepository;
@@ -27,6 +28,7 @@ public class FetchService {
     private final RideActivityRepository rideActivityRepository;
     private final KudosRepository kudosRepository;
     private final StravaService stravaService;
+    private final StravaRateLimiter rateLimiter;
 
     public FetchService(
             CommentRepository commentRepository,
@@ -34,13 +36,24 @@ public class FetchService {
             AthleteRepository athleteRepository,
             RideActivityRepository rideActivityRepository,
             KudosRepository kudosRepository,
-            StravaService stravaService) {
+            StravaService stravaService,
+            StravaRateLimiter rateLimiter) {
         this.commentRepository = commentRepository;
         this.followerRepository = followerRepository;
         this.athleteRepository = athleteRepository;
         this.rideActivityRepository = rideActivityRepository;
         this.kudosRepository = kudosRepository;
         this.stravaService = stravaService;
+        this.rateLimiter = rateLimiter;
+    }
+
+    /**
+     * Result of a windowed activity fetch. {@code reachedEnd} means pagination
+     * within the requested window ran to completion (Strava returned a
+     * short page); {@code stoppedOnBudget} means it was cut short because the
+     * rate-limit budget ran low and should be resumed on a later run.
+     */
+    public record FetchResult(int fetchedCount, boolean stoppedOnBudget, boolean reachedEnd) {
     }
 
     public void fetchAthlete(String accessToken) {
@@ -52,44 +65,37 @@ public class FetchService {
         athleteRepository.save(athlete);
     }
 
-    public void fetchAllActivities(String accessToken) {
+    public FetchResult fetchAllActivities(String accessToken) {
         log.debug("Fetching all activities");
         ZonedDateTime before = ZonedDateTime.now();
-        ZonedDateTime after = ZonedDateTime.of(2000, 1,1, 0, 0, 0, 0, ZoneOffset.UTC);
+        ZonedDateTime after = ZonedDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
         log.info("Fetching activities between {} and {}", after, before);
-        fetchActivities(accessToken, after, before);
+        return fetchActivities(accessToken, after, before);
     }
 
-    public void fetchRecentActivities(String accessToken) {
+    public FetchResult fetchRecentActivities(String accessToken) {
         log.debug("Fetching recent activities");
         ZonedDateTime before = ZonedDateTime.now();
         ZonedDateTime after = before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
         log.info("Fetching activities between {} and {}", after, before);
-        fetchActivities(accessToken, after, before);
+        return fetchActivities(accessToken, after, before);
     }
 
-    public void fetchOlderActivities(String accessToken) {
-        rideActivityRepository.findOldestRideActivity()
-                .ifPresentOrElse(
-                        oldestActivity -> {
-                            ZonedDateTime before = oldestActivity.getStartDateLocal().atZone(ZoneOffset.of(oldestActivity.getTimezone()));
-                            ZonedDateTime after = before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
-                            log.info("Fetching activities between {} and {}", after, before);
-                            fetchActivities(accessToken, after, before);
-                        },
-                        () -> {
-                            ZonedDateTime before = ZonedDateTime.now();
-                            ZonedDateTime after = before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
-                            log.info("Fetching activities between {} and {}", after, before);
-                            fetchActivities(accessToken, after, before);
-                        });
+    public FetchResult fetchOlderActivities(String accessToken) {
+        Optional<RideActivity> oldestActivity = rideActivityRepository.findOldestRideActivity();
+        ZonedDateTime before = oldestActivity
+                .map(activity -> activity.getStartDateLocal().atZone(ZoneOffset.of(activity.getTimezone())))
+                .orElseGet(ZonedDateTime::now);
+        ZonedDateTime after = before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
+        log.info("Fetching activities between {} and {}", after, before);
+        return fetchActivities(accessToken, after, before);
     }
 
     public void fetchKudos(String accessToken) {
         log.debug("Fetching kudos");
-        int count = 0;
         for (RideActivity activity : rideActivityRepository.findPublicActivitiesWithMismatchedKudosCounts()) {
-            if (count >= MAX_FETCHES) {
+            if (!rateLimiter.hasBudgetFor(1)) {
+                log.info("Rate limit budget low, pausing kudos fetch");
                 break;
             }
             log.debug("Fetching kudos for activity {}", activity);
@@ -100,15 +106,14 @@ public class FetchService {
                 kudos.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(follower)));
                 kudosRepository.save(kudos);
             });
-            count++;
         }
     }
 
     public void fetchComments(String accessToken) {
         log.debug("Fetching comments");
-        int count = 0;
         for (RideActivity activity : rideActivityRepository.findPublicActivitiesWithMismatchedCommentCounts()) {
-            if (count >= MAX_FETCHES) {
+            if (!rateLimiter.hasBudgetFor(1)) {
+                log.info("Rate limit budget low, pausing comments fetch");
                 break;
             }
             log.debug("Fetching comments for activity {}", activity);
@@ -117,16 +122,20 @@ public class FetchService {
                 comment.setFollower(Objects.requireNonNullElseGet(existingFollower, () -> followerRepository.save(comment.getFollower())));
                 commentRepository.save(comment);
             });
-            count++;
         }
     }
 
-    private void fetchActivities(String accessToken, ZonedDateTime after, ZonedDateTime before) {
+    private FetchResult fetchActivities(String accessToken, ZonedDateTime after, ZonedDateTime before) {
         int page = 1;
         int fetched = 0;
         int activitiesCount;
 
         do {
+            if (!rateLimiter.hasBudgetFor(1)) {
+                log.info("Rate limit budget low, pausing activity fetch at page {}", page);
+                return new FetchResult(fetched, true, false);
+            }
+
             List<RideActivity> activities = stravaService.getActivities(
                     accessToken,
                     page,
@@ -142,8 +151,9 @@ public class FetchService {
                 fetched += activitiesCount;
                 log.debug("Fetched {} activities", fetched);
             }
-        } while (activitiesCount > 0);
+        } while (activitiesCount == PER_PAGE);
 
         log.debug("Fetched a total of {} activities", fetched);
+        return new FetchResult(fetched, false, true);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -103,11 +104,20 @@ public class StravaOAuthService {
         HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<OAuthToken> responseEntity = restTemplate.exchange(
-                STRAVA_TOKEN_URL,
-                HttpMethod.POST,
-                requestEntity,
-                OAuthToken.class);
+        ResponseEntity<OAuthToken> responseEntity;
+        try {
+            responseEntity = restTemplate.exchange(
+                    STRAVA_TOKEN_URL,
+                    HttpMethod.POST,
+                    requestEntity,
+                    OAuthToken.class);
+        } catch (HttpClientErrorException e) {
+            log.error("Failed to refresh Strava token. HTTP Status Code: {}. Response Body: {}. " +
+                    "The stored refresh token may be stale, or client id/secret may not match the " +
+                    "Strava app it was issued for - re-authorize via /oauth/authorize.",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            return Optional.empty();
+        }
 
         if (responseEntity.getBody() != null) {
             oAuthTokenRepository.deleteAll();
