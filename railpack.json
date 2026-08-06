@@ -6,7 +6,7 @@
   "steps": {
     "build": {
       "commands": [
-        "chmod +x ./mvnw && export JAVA_HOME=\"$(mise where java)\" && ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
+        "chmod +x ./mvnw && export JAVA_HOME=$(mise where java) && ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
       ]
     }
   }
