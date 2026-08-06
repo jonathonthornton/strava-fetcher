@@ -1,9 +1,12 @@
 {
   "$schema": "https://schema.railpack.com",
+  "packages": {
+    "java": "21"
+  },
   "steps": {
     "build": {
       "commands": [
-        "unset JAVA_HOME && ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
+        "chmod +x ./mvnw && unset JAVA_HOME && ./mvnw -DoutputFile=target/mvn-dependency-list.log -B -DskipTests clean dependency:list install -Pproduction"
       ]
     }
   }
