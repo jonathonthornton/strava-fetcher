@@ -1,5 +1,6 @@
 package net.jon.stravafetcher.controller;
 
+import net.jon.stravafetcher.dto.DistanceRangeCountDTO;
 import net.jon.stravafetcher.mapper.RideActivityMapper;
 import net.jon.stravafetcher.dto.RideActivityDTO;
 import net.jon.stravafetcher.repository.RideActivityRepository;
@@ -61,6 +62,11 @@ public class ActivityController {
     @GetMapping("/count/{fromDistance}")
     public int getCountRidesLongerThan(@PathVariable int fromDistance) {
         return rideActivityRepository.countRidesLongerThan(fromDistance);
+    }
+
+    @GetMapping("/distance-range-counts")
+    public List<DistanceRangeCountDTO> getDistanceRangeCounts() {
+        return rideActivityRepository.findDistanceRangeCounts();
     }
 }
 
