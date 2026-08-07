@@ -4,9 +4,11 @@ import net.jon.stravafetcher.dto.DistanceRangeCountDTO;
 import net.jon.stravafetcher.dto.EarliestRideByBikeDTO;
 import net.jon.stravafetcher.dto.LongRidesByBikeDTO;
 import net.jon.stravafetcher.dto.LongRidesPerYearDTO;
+import net.jon.stravafetcher.dto.OdometerDTO;
 import net.jon.stravafetcher.dto.RidesByBikeDTO;
 import net.jon.stravafetcher.mapper.RideActivityMapper;
 import net.jon.stravafetcher.dto.RideActivityDTO;
+import net.jon.stravafetcher.repository.BikeRepository;
 import net.jon.stravafetcher.repository.RideActivityRepository;
 import net.jon.stravafetcher.service.EddingtonNumberService;
 import org.slf4j.Logger;
@@ -28,10 +30,12 @@ public class ActivityController {
     private static final int LONG_RIDE_DISTANCE = 200;
 
     private final RideActivityRepository rideActivityRepository;
+    private final BikeRepository bikeRepository;
     private final EddingtonNumberService eddingtonNumberService;
 
-    public ActivityController(RideActivityRepository rideActivityRepository, EddingtonNumberService eddingtonNumberService) {
+    public ActivityController(RideActivityRepository rideActivityRepository, BikeRepository bikeRepository, EddingtonNumberService eddingtonNumberService) {
         this.rideActivityRepository = rideActivityRepository;
+        this.bikeRepository = bikeRepository;
         this.eddingtonNumberService = eddingtonNumberService;
     }
 
@@ -119,6 +123,12 @@ public class ActivityController {
     public List<EarliestRideByBikeDTO> getEarliestRideByBike() {
         log.debug("getEarliestRideByBike called");
         return rideActivityRepository.findEarliestRideByBike();
+    }
+
+    @GetMapping("/odometer")
+    public List<OdometerDTO> getOdometer() {
+        log.debug("getOdometer called");
+        return bikeRepository.findOdometer();
     }
 }
 
