@@ -163,21 +163,63 @@ GET /sync/status → SyncStatusDTO
 **`StravaFetcherApplication`**
 - Added `@EnableScheduling`; removed the `CommandLineRunner` bean.
 
-## Deployment notes (Railway)
+## Environments: local vs. Railway
 
-- App: builds from `pom.xml` via Nixpacks/Dockerfile — no special config
-  needed beyond what Elastic Beanstalk already assumed
-  (`TOMCAT_PORT` env var pattern in `application.properties`).
-- DB: Railway's managed Postgres plugin, wired through the existing
-  `spring.datasource.url=${DATABASE_URL:...}` pattern.
-- Leave Railway's "Serverless" sleep option **off** — required for
-  `@Scheduled` to keep firing without an inbound request waking the app.
-- Update `strava.redirect.uri` to the Railway-issued (or custom) domain,
-  matching `StravaOAuthCallbackController`'s callback path.
-- Before going live: move `strava.client.secret` and
-  `spring.datasource.password` out of the committed
-  `application.properties` and into Railway environment variables — the
-  secret is currently checked into the repo in plaintext.
+All environment-specific config is read from env vars in
+`application.properties`, each with a `local`-friendly default baked in.
+Nothing in the jar/build differs between environments; only these
+variables change.
+
+| Variable | Local (default in `application.properties`) | Railway (cloud) |
+|---|---|---|
+| `STRAVA_CLIENT_ID` | `14826` (default, not sensitive) | same, unless the Strava app is ever recreated |
+| `STRAVA_CLIENT_SECRET` | baked-in default (kept as-is, per explicit decision — not rotated) | same value, or override in Railway Variables if rotated |
+| `STRAVA_REDIRECT_URI` | `http://localhost:8080/oauth/callback` | `https://<railway-domain>/oauth/callback`, e.g. `https://strava-fetcher-production.up.railway.app/oauth/callback` |
+| `DATABASE_URL` | `jdbc:postgresql://localhost:5432/strava` | `jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}` (Railway variable reference to the Postgres service) |
+| `DATABASE_USERNAME` | `jon` | `${{Postgres.PGUSER}}` |
+| `DATABASE_PASSWORD` | baked-in default (local-only Postgres password) | `${{Postgres.PGPASSWORD}}` |
+| `TOMCAT_PORT` | `8080` (default) | usually left unset — Railway's proxy targets the app's default port automatically |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:4200` (Angular dev server) | frontend's real origin, e.g. its CloudFront domain — not the backend's own Railway domain |
+
+Notes specific to each environment:
+
+**Local**
+- Needs a local Postgres instance reachable at `DATABASE_URL`, with the
+  `strava` schema created manually first (Postgres doesn't auto-create
+  schemas; `ddl-auto=update` only creates tables inside an existing one):
+  `CREATE SCHEMA IF NOT EXISTS strava;`
+- Run with `./mvnw spring-boot:run`, then visit
+  `http://localhost:8080/oauth/authorize` once to connect Strava.
+- `client.StravaClient`'s Scanner-based interactive OAuth flow is
+  `@Profile("local")`-only; the web-based `/oauth/authorize` +
+  `/oauth/callback` flow works in both environments and is the one actually
+  used day-to-day.
+
+**Railway (cloud)**
+- App service and Postgres are separate Railway services in the same
+  project; the `DATABASE_*` variables above use Railway's `${{Service.VAR}}`
+  reference syntax to pull connection details from the Postgres service —
+  set these on the **app service's** Variables tab, not the Postgres
+  service's.
+- Same manual schema-creation step as local, but run against the Railway
+  DB (Railway's Data tab has a query console, or `railway connect postgres`).
+- Leave the "Serverless" sleep option **off** on the app service — required
+  for `StravaSyncScheduler`'s `@Scheduled` job to keep firing without an
+  inbound request waking the app.
+- Generate the app's public domain under Settings → Networking if not
+  already done, then set `STRAVA_REDIRECT_URI` to match.
+- **Strava's API application only supports one registered "Authorization
+  Callback Domain" at a time** (Strava dashboard, not this app) — there's
+  no way to register both `localhost` and the Railway domain
+  simultaneously. Switching which environment you're testing OAuth against
+  means swapping that one field at
+  https://www.strava.com/settings/api. Everything else (tokens, synced
+  data) is per-database, not per-domain, so this only matters for the
+  `/oauth/authorize` step itself.
+- After deploy, `GET /sync/status` reports `lastRunOutcome`
+  (`NOT_AUTHORIZED` / `RATE_LIMITED` / `ERROR` / `COMPLETED`) and activity
+  counts — the fastest way to confirm the scheduled sync is actually
+  running against the cloud DB rather than debugging blind.
 
 ## Implementation status
 

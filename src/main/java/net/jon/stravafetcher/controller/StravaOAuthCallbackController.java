@@ -1,6 +1,8 @@
 package net.jon.stravafetcher.controller;
 
 import net.jon.stravafetcher.service.StravaOAuthService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,8 @@ import java.net.URI;
  */
 @RestController
 public class StravaOAuthCallbackController {
+    private static final Logger log = LoggerFactory.getLogger(StravaOAuthCallbackController.class);
+
     private final StravaOAuthService stravaOAuthService;
 
     public StravaOAuthCallbackController(StravaOAuthService stravaOAuthService) {
@@ -26,6 +30,7 @@ public class StravaOAuthCallbackController {
 
     @GetMapping("/oauth/authorize")
     public ResponseEntity<Void> authorize() {
+        log.debug("authorize called");
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(stravaOAuthService.getAuthorizationUrl()))
                 .build();
@@ -33,6 +38,7 @@ public class StravaOAuthCallbackController {
 
     @GetMapping("/oauth/callback")
     public ResponseEntity<String> callback(@RequestParam("code") String code) {
+        log.debug("callback called with code={}", code);
         return stravaOAuthService.getOAuthToken(code)
                 .map(token -> ResponseEntity.ok("Strava account connected. You can close this window."))
                 .orElse(ResponseEntity.status(HttpStatus.BAD_GATEWAY)

@@ -1,12 +1,15 @@
 package net.jon.stravafetcher.repository;
 
 import net.jon.stravafetcher.dto.DistanceRangeCountDTO;
+import net.jon.stravafetcher.dto.EarliestRideByBikeDTO;
+import net.jon.stravafetcher.dto.RidesByBikeDTO;
 import net.jon.stravafetcher.model.RideActivity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -47,6 +50,32 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
 
     @Query(value = "SELECT * FROM strava.ride_activity ORDER BY start_date_local DESC LIMIT :n", nativeQuery = true)
     List<RideActivity> findRecentRides(@Param("n") int n);
+
+    @Query(value = """
+            SELECT bike.name,
+                   COUNT(ride_activity.id)                        AS rides,
+                   ROUND(CAST(SUM(ride_activity.distance) AS numeric), 0) AS distance
+            FROM strava.ride_activity
+                     JOIN
+                 strava.bike ON strava.ride_activity.gear_id = strava.bike.id
+            WHERE ride_activity.start_date_local > :sinceDate
+            GROUP BY bike.name
+            ORDER BY rides DESC
+            """, nativeQuery = true)
+    List<RidesByBikeDTO> findRidesByBikeSinceDate(@Param("sinceDate") LocalDate sinceDate);
+
+    @Query(value = """
+            SELECT bike.name,
+                   TO_CHAR(MIN(ride_activity.start_date_local), 'YYYY-MM-DD') AS "earliestRideDate",
+                   EXTRACT(YEAR FROM AGE(MIN(ride_activity.start_date_local))) || ' years ' ||
+                   EXTRACT(MONTH FROM AGE(MIN(ride_activity.start_date_local))) || ' months' AS "yearsMonthsAgo"
+            FROM strava.ride_activity
+                     JOIN strava.bike ON strava.ride_activity.gear_id = strava.bike.id
+            WHERE bike.name NOT IN ('Paconi', 'Gellie')
+            GROUP BY bike.name
+            ORDER BY "earliestRideDate"
+            """, nativeQuery = true)
+    List<EarliestRideByBikeDTO> findEarliestRideByBike();
 
     @Query(value = "SELECT * FROM strava.ride_activity r WHERE r.distance >= :minDistance AND r.distance < :maxDistance ORDER BY r.distance DESC", nativeQuery = true)
     List<RideActivity> findRidesBetween(@Param("minDistance") int minDistance, @Param("maxDistance") int maxDistance);

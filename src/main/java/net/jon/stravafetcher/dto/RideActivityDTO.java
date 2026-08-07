@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 public class RideActivityDTO {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private static final String ACTIVITY_URL_PREFIX = "https://www.strava.com/activities/";
     private long id;
     private String name;
     private double distance;
@@ -31,6 +32,10 @@ public class RideActivityDTO {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getUrl() {
+        return ACTIVITY_URL_PREFIX + id;
     }
 
     public String getName() {

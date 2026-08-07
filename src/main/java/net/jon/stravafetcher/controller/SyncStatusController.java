@@ -5,6 +5,8 @@ import net.jon.stravafetcher.dto.SyncStatusDTO;
 import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.RideActivityRepository;
 import net.jon.stravafetcher.repository.SyncStateRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/sync")
 public class SyncStatusController {
+    private static final Logger log = LoggerFactory.getLogger(SyncStatusController.class);
 
     private final RideActivityRepository rideActivityRepository;
     private final SyncStateRepository syncStateRepository;
@@ -28,6 +31,7 @@ public class SyncStatusController {
 
     @GetMapping("/status")
     public SyncStatusDTO status() {
+        log.debug("status called");
         SyncStatusDTO dto = new SyncStatusDTO();
         dto.setTotalActivities(rideActivityRepository.count());
 
