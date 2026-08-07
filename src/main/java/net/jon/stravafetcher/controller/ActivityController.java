@@ -2,6 +2,8 @@ package net.jon.stravafetcher.controller;
 
 import net.jon.stravafetcher.dto.DistanceRangeCountDTO;
 import net.jon.stravafetcher.dto.EarliestRideByBikeDTO;
+import net.jon.stravafetcher.dto.LongRidesByBikeDTO;
+import net.jon.stravafetcher.dto.LongRidesPerYearDTO;
 import net.jon.stravafetcher.dto.RidesByBikeDTO;
 import net.jon.stravafetcher.mapper.RideActivityMapper;
 import net.jon.stravafetcher.dto.RideActivityDTO;
@@ -59,6 +61,18 @@ public class ActivityController {
         return rideActivityRepository.findRidesLongerThan(LONG_RIDE_DISTANCE).stream()
                 .map(RideActivityMapper::mapToDTO)
                 .toList();
+    }
+
+    @GetMapping("/long-rides-by-bike")
+    public List<LongRidesByBikeDTO> getLongRidesByBike() {
+        log.debug("getLongRidesByBike called");
+        return rideActivityRepository.findLongRidesByBike(LONG_RIDE_DISTANCE);
+    }
+
+    @GetMapping("/long-rides-per-year")
+    public List<LongRidesPerYearDTO> getLongRidesPerYear() {
+        log.debug("getLongRidesPerYear called");
+        return rideActivityRepository.findLongRidesPerYear(LONG_RIDE_DISTANCE);
     }
 
     @GetMapping("/{fromDistance}/{toDistance}")

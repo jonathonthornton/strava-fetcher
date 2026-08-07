@@ -2,6 +2,8 @@ package net.jon.stravafetcher.repository;
 
 import net.jon.stravafetcher.dto.DistanceRangeCountDTO;
 import net.jon.stravafetcher.dto.EarliestRideByBikeDTO;
+import net.jon.stravafetcher.dto.LongRidesByBikeDTO;
+import net.jon.stravafetcher.dto.LongRidesPerYearDTO;
 import net.jon.stravafetcher.dto.RidesByBikeDTO;
 import net.jon.stravafetcher.model.RideActivity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -88,6 +90,27 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
 
     @Query(value = "SELECT COUNT(*) FROM strava.ride_activity r WHERE r.distance >= :minDistance", nativeQuery = true)
     int countRidesLongerThan(@Param("minDistance") int minDistance);
+
+    @Query(value = """
+            SELECT bike.name,
+                   COUNT(ride_activity.id) AS rides
+            FROM strava.ride_activity
+                     JOIN strava.bike ON strava.ride_activity.gear_id = strava.bike.id
+            WHERE ride_activity.distance >= :minDistance
+            GROUP BY bike.name
+            ORDER BY rides DESC
+            """, nativeQuery = true)
+    List<LongRidesByBikeDTO> findLongRidesByBike(@Param("minDistance") int minDistance);
+
+    @Query(value = """
+            SELECT CAST(EXTRACT(YEAR FROM ride_activity.start_date_local) AS int) AS year,
+                   COUNT(*) AS rides
+            FROM strava.ride_activity
+            WHERE ride_activity.distance >= :minDistance
+            GROUP BY year
+            ORDER BY year
+            """, nativeQuery = true)
+    List<LongRidesPerYearDTO> findLongRidesPerYear(@Param("minDistance") int minDistance);
 
     @Query(value = "SELECT * FROM strava.ride_activity ra WHERE ra.start_date_local = (SELECT MAX(ra2.start_date_local) FROM strava.ride_activity ra2)", nativeQuery = true)
     RideActivity findNewestRideActivity();
