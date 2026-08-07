@@ -21,6 +21,9 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     @Query(value = "SELECT CAST(r.distance AS int) FROM strava.ride_activity r", nativeQuery = true)
     List<Integer> findAllDistances();
 
+    @Query(value = "SELECT CAST(r.distance AS int) FROM strava.ride_activity r ORDER BY r.distance DESC LIMIT :maxRows", nativeQuery = true)
+    List<Integer> findDistancesDesc(@Param("maxRows") int maxRows);
+
     @Query(value = """
             SELECT distance_range AS "distanceRange", COUNT(*) AS "rideCount"
             FROM (SELECT CASE
@@ -108,7 +111,7 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
             FROM strava.ride_activity
             WHERE ride_activity.distance >= :minDistance
             GROUP BY year
-            ORDER BY year
+            ORDER BY year DESC
             """, nativeQuery = true)
     List<LongRidesPerYearDTO> findLongRidesPerYear(@Param("minDistance") int minDistance);
 
