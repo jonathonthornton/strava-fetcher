@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -134,6 +135,10 @@ public class RideActivity {
 
     @Column(name = "suffer_score")
     private int sufferScore;
+
+    @JsonIgnore
+    @Column(name = "last_synced_at")
+    private Instant lastSyncedAt;
 
     public long getId() {
         return id;
@@ -440,6 +445,14 @@ public class RideActivity {
 
     public void setSufferScore(int sufferScore) {
         this.sufferScore = sufferScore;
+    }
+
+    public Instant getLastSyncedAt() {
+        return lastSyncedAt;
+    }
+
+    public void setLastSyncedAt(Instant lastSyncedAt) {
+        this.lastSyncedAt = lastSyncedAt;
     }
 
     public String getBike() {

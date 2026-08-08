@@ -9,20 +9,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
 /**
  * Runs one budgeted pass of the Strava sync: refresh the newest activities,
- * continue the backward backfill if it isn't finished, then spend whatever
- * rate-limit budget is left on kudos/comments enrichment. Each phase checks
- * the shared {@link StravaRateLimiter} before doing any work, so a single
- * run stops cleanly instead of tripping a 429; the next scheduled run picks
- * up wherever this one left off.
+ * continue the backward backfill if it isn't finished, spend whatever
+ * rate-limit budget is left on kudos/comments enrichment, then continue the
+ * (infrequent) reconciliation sweep. Each phase checks the shared
+ * {@link StravaRateLimiter} before doing any work, so a single run stops
+ * cleanly instead of tripping a 429; the next scheduled run picks up
+ * wherever this one left off.
  */
 @Service
 public class StravaSyncOrchestrator {
     private static final Logger log = LoggerFactory.getLogger(StravaSyncOrchestrator.class);
+    private static final Duration RECONCILIATION_INTERVAL = Duration.ofDays(30);
 
     private final StravaOAuthService stravaOAuthService;
     private final FetchService fetchService;
@@ -58,6 +61,7 @@ public class StravaSyncOrchestrator {
             syncNewestActivities(token);
             continueActivityBackfill(token, syncState);
             enrichKudosAndComments(token);
+            continueReconciliationSweep(token, syncState);
             syncState.setLastRunOutcome("COMPLETED");
             syncState.setLastError(null);
         } catch (StravaRateLimitException e) {
@@ -107,6 +111,49 @@ public class StravaSyncOrchestrator {
         if (!rateLimiter.isExhausted()) {
             fetchService.fetchComments(token);
         }
+    }
+
+    /**
+     * Fifth, lowest-priority phase: keeps activity names/gear fresh beyond the
+     * regular sync's window, and detects activities deleted on Strava. Runs
+     * last so it only ever spends budget the phases above didn't need — see
+     * docs/reconciliation.md. A sweep may span many ticks; progress resumes
+     * from {@code SyncState.reconciliationCursorBefore}.
+     */
+    private void continueReconciliationSweep(String token, SyncState syncState) {
+        if (rateLimiter.isExhausted()) {
+            return;
+        }
+
+        if (syncState.getReconciliationSweepStartedAt() == null) {
+            if (!reconciliationDue(syncState)) {
+                return;
+            }
+            log.info("Starting reconciliation sweep");
+            syncState.setReconciliationSweepStartedAt(Instant.now());
+            syncState.setReconciliationCursorBefore(null);
+        }
+
+        Instant cursor = syncState.getReconciliationCursorBefore() != null
+                ? syncState.getReconciliationCursorBefore()
+                : syncState.getReconciliationSweepStartedAt();
+
+        FetchService.FetchResult result = fetchService.fetchActivitiesForReconciliation(token, cursor);
+
+        if (result.reachedEnd()) {
+            int deleted = fetchService.deleteStaleActivities(syncState.getReconciliationSweepStartedAt());
+            log.info("Reconciliation sweep complete; deleted {} activities no longer on Strava", deleted);
+            syncState.setReconciliationLastCompletedAt(Instant.now());
+            syncState.setReconciliationSweepStartedAt(null);
+            syncState.setReconciliationCursorBefore(null);
+        } else if (result.oldestFetchedAt() != null) {
+            syncState.setReconciliationCursorBefore(result.oldestFetchedAt());
+        }
+    }
+
+    private boolean reconciliationDue(SyncState syncState) {
+        Instant lastCompleted = syncState.getReconciliationLastCompletedAt();
+        return lastCompleted == null || lastCompleted.isBefore(Instant.now().minus(RECONCILIATION_INTERVAL));
     }
 
     private Optional<String> getValidAccessToken() {

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -144,4 +145,7 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
             "HAVING COUNT(c) < r.commentCount - 3 " + // Allow for name collisions.
             "ORDER BY r.startDateLocal DESC")
     List<RideActivity> findPublicActivitiesWithMismatchedCommentCounts();
+
+    @Query("SELECT r FROM RideActivity r WHERE r.lastSyncedAt IS NULL OR r.lastSyncedAt < :cutoff")
+    List<RideActivity> findStaleActivities(@Param("cutoff") Instant cutoff);
 }

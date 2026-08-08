@@ -9,8 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 public interface KudosRepository extends JpaRepository<Kudos, Long> {
+    void deleteByActivityIdIn(Collection<Long> activityIds);
+
     @Query("SELECT new net.jon.stravafetcher.dto.FollowerDTO(f.firstName, f.lastName, COUNT(k)) " +
             "FROM Kudos k " +
             "JOIN k.follower f " +

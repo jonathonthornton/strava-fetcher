@@ -36,6 +36,15 @@ public class SyncState {
     @Column(name = "last_error")
     private String lastError;
 
+    @Column(name = "reconciliation_sweep_started_at")
+    private Instant reconciliationSweepStartedAt;
+
+    @Column(name = "reconciliation_cursor_before")
+    private Instant reconciliationCursorBefore;
+
+    @Column(name = "reconciliation_last_completed_at")
+    private Instant reconciliationLastCompletedAt;
+
     public long getId() {
         return id;
     }
@@ -82,5 +91,29 @@ public class SyncState {
 
     public void setLastError(String lastError) {
         this.lastError = lastError;
+    }
+
+    public Instant getReconciliationSweepStartedAt() {
+        return reconciliationSweepStartedAt;
+    }
+
+    public void setReconciliationSweepStartedAt(Instant reconciliationSweepStartedAt) {
+        this.reconciliationSweepStartedAt = reconciliationSweepStartedAt;
+    }
+
+    public Instant getReconciliationCursorBefore() {
+        return reconciliationCursorBefore;
+    }
+
+    public void setReconciliationCursorBefore(Instant reconciliationCursorBefore) {
+        this.reconciliationCursorBefore = reconciliationCursorBefore;
+    }
+
+    public Instant getReconciliationLastCompletedAt() {
+        return reconciliationLastCompletedAt;
+    }
+
+    public void setReconciliationLastCompletedAt(Instant reconciliationLastCompletedAt) {
+        this.reconciliationLastCompletedAt = reconciliationLastCompletedAt;
     }
 }

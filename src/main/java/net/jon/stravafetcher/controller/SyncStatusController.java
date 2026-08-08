@@ -49,6 +49,8 @@ public class SyncStatusController {
             dto.setActivityBackfillComplete(syncState.isActivityBackfillComplete());
             dto.setLastRunAt(syncState.getLastRunFinishedAt());
             dto.setLastRunOutcome(syncState.getLastRunOutcome());
+            dto.setReconciliationInProgress(syncState.getReconciliationSweepStartedAt() != null);
+            dto.setReconciliationLastCompletedAt(syncState.getReconciliationLastCompletedAt());
         });
 
         dto.setShortTermUsage(rateLimiter.getShortTermUsage());

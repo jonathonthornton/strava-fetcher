@@ -16,6 +16,8 @@ public class SyncStatusDTO {
     private int dailyLimit;
     private Instant lastRunAt;
     private String lastRunOutcome;
+    private boolean reconciliationInProgress;
+    private Instant reconciliationLastCompletedAt;
 
     public long getTotalActivities() {
         return totalActivities;
@@ -111,5 +113,21 @@ public class SyncStatusDTO {
 
     public void setLastRunOutcome(String lastRunOutcome) {
         this.lastRunOutcome = lastRunOutcome;
+    }
+
+    public boolean isReconciliationInProgress() {
+        return reconciliationInProgress;
+    }
+
+    public void setReconciliationInProgress(boolean reconciliationInProgress) {
+        this.reconciliationInProgress = reconciliationInProgress;
+    }
+
+    public Instant getReconciliationLastCompletedAt() {
+        return reconciliationLastCompletedAt;
+    }
+
+    public void setReconciliationLastCompletedAt(Instant reconciliationLastCompletedAt) {
+        this.reconciliationLastCompletedAt = reconciliationLastCompletedAt;
     }
 }
