@@ -112,7 +112,7 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
             FROM strava.ride_activity
             WHERE ride_activity.distance >= :minDistance
             GROUP BY year
-            ORDER BY year DESC
+            ORDER BY rides DESC
             """, nativeQuery = true)
     List<LongRidesPerYearDTO> findLongRidesPerYear(@Param("minDistance") int minDistance);
 
