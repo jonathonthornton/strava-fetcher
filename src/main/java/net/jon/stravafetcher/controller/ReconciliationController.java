@@ -41,6 +41,9 @@ public class ReconciliationController {
         syncStateRepository.save(syncState);
 
         log.info("Reconciliation sweep triggered manually");
+        if (!syncState.isActivityBackfillComplete()) {
+            return "Reconciliation sweep queued; it's gated behind activity backfill, which hasn't finished yet, so it will start once that completes.";
+        }
         return "Reconciliation sweep started; the next scheduled sync run will begin working through it.";
     }
 }

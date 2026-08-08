@@ -42,6 +42,17 @@ means each phase only spends whatever budget the ones before it didn't
 use, and every phase already bails via `rateLimiter.isExhausted()`. No new
 coordination logic needed.
 
+The sweep is also gated on `syncState.isActivityBackfillComplete()`. Both
+backfill and reconciliation walk the same activity history from the same
+list endpoint, and `reconciliationDue()` treats a never-completed sweep
+(`reconciliationLastCompletedAt == null`) as due — true from the very
+first sync run on a fresh account. Without the gate, reconciliation would
+start racing backfill immediately, both re-fetching and re-saving the same
+activities in the same tick and burning shared rate-limit budget on
+duplicate work. The manual trigger endpoint still records the request
+(`reconciliationSweepStartedAt`), it just won't be picked up by the
+orchestrator until backfill finishes.
+
 The phase itself does very little on most ticks:
 
 - If no sweep is in progress and the last completed one was ≥30 days ago
@@ -227,6 +238,9 @@ something unexpected.
 - **Regular sync takes priority** for rate-limit budget — achieved
   structurally by making the sweep the last phase of the existing
   orchestrator run, not a separately scheduled competitor.
+- **Reconciliation is gated behind activity backfill completing.** Both
+  phases walk the full activity history; letting them run concurrently
+  wastes budget re-fetching the same activities twice. See "Design" above.
 - **Manual trigger endpoint added**, for post-deploy verification and
   occasional on-demand cleanup, rather than cron-only.
 - **`POST /admin/reconciliation/trigger` left unauthenticated.** No admin

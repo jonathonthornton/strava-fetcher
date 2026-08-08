@@ -125,6 +125,10 @@ public class StravaSyncOrchestrator {
             return;
         }
 
+        if (!syncState.isActivityBackfillComplete()) {
+            return;
+        }
+
         if (syncState.getReconciliationSweepStartedAt() == null) {
             if (!reconciliationDue(syncState)) {
                 return;
