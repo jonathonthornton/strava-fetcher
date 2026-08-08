@@ -26,6 +26,7 @@ import java.util.Optional;
 public class StravaSyncOrchestrator {
     private static final Logger log = LoggerFactory.getLogger(StravaSyncOrchestrator.class);
     private static final Duration RECONCILIATION_INTERVAL = Duration.ofDays(30);
+    private static final Duration ATHLETE_SYNC_INTERVAL = Duration.ofDays(1);
 
     private final StravaOAuthService stravaOAuthService;
     private final FetchService fetchService;
@@ -57,8 +58,8 @@ public class StravaSyncOrchestrator {
             }
 
             String token = accessToken.get();
-            ensureAthleteFetched(token);
-            syncNewestActivities(token);
+            ensureAthleteFetched(token, syncState);
+            syncNewestActivities(token, syncState);
             continueActivityBackfill(token, syncState);
             enrichKudosAndComments(token);
             continueReconciliationSweep(token, syncState);
@@ -78,18 +79,30 @@ public class StravaSyncOrchestrator {
         }
     }
 
-    private void ensureAthleteFetched(String token) {
+    private void ensureAthleteFetched(String token, SyncState syncState) {
         if (rateLimiter.isExhausted()) {
+            return;
+        }
+        Instant lastSynced = syncState.getLastAthleteSyncAt();
+        if (lastSynced != null && lastSynced.isAfter(Instant.now().minus(ATHLETE_SYNC_INTERVAL))) {
             return;
         }
         fetchService.fetchAthlete(token);
+        syncState.setLastAthleteSyncAt(Instant.now());
     }
 
-    private void syncNewestActivities(String token) {
+    private void syncNewestActivities(String token, SyncState syncState) {
         if (rateLimiter.isExhausted()) {
             return;
         }
-        fetchService.fetchRecentActivities(token);
+        // Anchor to the start of this fetch, not its completion, so anything
+        // created while the fetch is in flight is still covered by next
+        // tick's window (plus FetchService's own overlap margin on top).
+        Instant fetchStartedAt = Instant.now();
+        FetchService.FetchResult result = fetchService.fetchRecentActivities(token, syncState.getLastActivitySyncAt());
+        if (result.reachedEnd()) {
+            syncState.setLastActivitySyncAt(fetchStartedAt);
+        }
     }
 
     private void continueActivityBackfill(String token, SyncState syncState) {

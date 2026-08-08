@@ -45,6 +45,12 @@ public class SyncState {
     @Column(name = "reconciliation_last_completed_at")
     private Instant reconciliationLastCompletedAt;
 
+    @Column(name = "last_activity_sync_at")
+    private Instant lastActivitySyncAt;
+
+    @Column(name = "last_athlete_sync_at")
+    private Instant lastAthleteSyncAt;
+
     public long getId() {
         return id;
     }
@@ -115,5 +121,21 @@ public class SyncState {
 
     public void setReconciliationLastCompletedAt(Instant reconciliationLastCompletedAt) {
         this.reconciliationLastCompletedAt = reconciliationLastCompletedAt;
+    }
+
+    public Instant getLastActivitySyncAt() {
+        return lastActivitySyncAt;
+    }
+
+    public void setLastActivitySyncAt(Instant lastActivitySyncAt) {
+        this.lastActivitySyncAt = lastActivitySyncAt;
+    }
+
+    public Instant getLastAthleteSyncAt() {
+        return lastAthleteSyncAt;
+    }
+
+    public void setLastAthleteSyncAt(Instant lastAthleteSyncAt) {
+        this.lastAthleteSyncAt = lastAthleteSyncAt;
     }
 }

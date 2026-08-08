@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -23,6 +24,7 @@ import java.util.Optional;
 public class FetchService {
     private static final int PER_PAGE = 100;
     private static final int MONTHS_TO_FETCH = 6;
+    private static final Duration SYNC_OVERLAP_MARGIN = Duration.ofMinutes(5);
     private static final ZonedDateTime EARLIEST_POSSIBLE_DATE = ZonedDateTime.of(2000, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
     private static final Logger log = LoggerFactory.getLogger(FetchService.class);
     private final CommentRepository commentRepository;
@@ -120,10 +122,19 @@ public class FetchService {
         return staleActivities.size();
     }
 
-    public FetchResult fetchRecentActivities(String accessToken) {
+    /**
+     * Fetches activities since {@code lastSyncAt} (a small overlap margin is
+     * subtracted to cover clock skew and activities that landed mid-fetch
+     * last time), falling back to the old 6-month window when there's no
+     * prior sync to anchor to yet (fresh deploy, or upgrading from before
+     * this field existed).
+     */
+    public FetchResult fetchRecentActivities(String accessToken, Instant lastSyncAt) {
         log.debug("Fetching recent activities");
         ZonedDateTime before = ZonedDateTime.now();
-        ZonedDateTime after = before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
+        ZonedDateTime after = lastSyncAt != null
+                ? lastSyncAt.minus(SYNC_OVERLAP_MARGIN).atZone(ZoneOffset.UTC)
+                : before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
         log.info("Fetching activities between {} and {}", after, before);
         return fetchActivities(accessToken, after, before);
     }
