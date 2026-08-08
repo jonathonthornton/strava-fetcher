@@ -2,7 +2,7 @@ package net.jon.stravafetcher.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import net.jon.stravafetcher.client.StravaRateLimiter;
 import net.jon.stravafetcher.exception.StravaRateLimitException;
 import net.jon.stravafetcher.model.Athlete;
@@ -113,7 +113,7 @@ public class StravaService {
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
         T result = null;
         try {
