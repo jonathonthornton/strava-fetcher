@@ -16,17 +16,20 @@ import java.time.Instant;
 @Component
 public class StravaRateLimiter {
     private static final Logger log = LoggerFactory.getLogger(StravaRateLimiter.class);
-    private static final String LIMIT_HEADER = "X-RateLimit-Limit";
-    private static final String USAGE_HEADER = "X-RateLimit-Usage";
+    // This service only issues non-upload (read) requests, so track the
+    // read-specific limit rather than the overall (read+upload) one.
+    private static final String LIMIT_HEADER = "X-ReadRateLimit-Limit";
+    private static final String USAGE_HEADER = "X-ReadRateLimit-Usage";
 
     // Stop short of Strava's published limits to leave headroom for
     // concurrent traffic (token refreshes, manual debugging, etc).
     private static final int SAFETY_MARGIN = 20;
 
+    // Strava's default non-upload limits: 100 per 15 min, 1000 per day.
     private volatile int shortTermUsage = 0;
-    private volatile int shortTermLimit = 600;
+    private volatile int shortTermLimit = 100;
     private volatile int dailyUsage = 0;
-    private volatile int dailyLimit = 30000;
+    private volatile int dailyLimit = 1000;
     private volatile Instant rateLimitedUntil;
 
     public void updateFromHeaders(HttpHeaders headers) {
