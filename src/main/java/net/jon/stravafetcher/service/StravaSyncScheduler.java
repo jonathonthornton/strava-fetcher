@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StravaSyncScheduler {
     private static final Logger log = LoggerFactory.getLogger(StravaSyncScheduler.class);
-    private static final long TEN_MINUTES_MS = 10 * 60 * 1000;
+    private static final long FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
     private final StravaSyncOrchestrator orchestrator;
 
@@ -16,7 +16,7 @@ public class StravaSyncScheduler {
         this.orchestrator = orchestrator;
     }
 
-    @Scheduled(fixedDelay = TEN_MINUTES_MS)
+    @Scheduled(fixedDelay = FIFTEEN_MINUTES_MS)
     public void run() {
         log.debug("Starting scheduled Strava sync run");
         orchestrator.runBudgetedSync();
