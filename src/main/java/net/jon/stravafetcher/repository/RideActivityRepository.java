@@ -58,14 +58,14 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     List<RideActivity> findRecentRides(@Param("n") int n);
 
     @Query(value = """
-            SELECT bike.name,
+            SELECT COALESCE(bike.name, 'Unknown') AS name,
                    COUNT(ride_activity.id)                        AS rides,
                    ROUND(CAST(SUM(ride_activity.distance) AS numeric), 0) AS distance
             FROM strava.ride_activity
-                     JOIN
+                     LEFT JOIN
                  strava.bike ON strava.ride_activity.gear_id = strava.bike.id
             WHERE ride_activity.start_date_local > :sinceDate
-            GROUP BY bike.name
+            GROUP BY COALESCE(bike.name, 'Unknown')
             ORDER BY rides DESC
             """, nativeQuery = true)
     List<RidesByBikeDTO> findRidesByBikeSinceDate(@Param("sinceDate") LocalDate sinceDate);
