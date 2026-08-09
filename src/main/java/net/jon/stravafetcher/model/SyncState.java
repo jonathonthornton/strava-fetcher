@@ -51,6 +51,9 @@ public class SyncState {
     @Column(name = "last_athlete_sync_at")
     private Instant lastAthleteSyncAt;
 
+    @Column(name = "last_kudos_comments_sync_at")
+    private Instant lastKudosCommentsSyncAt;
+
     public long getId() {
         return id;
     }
@@ -137,5 +140,13 @@ public class SyncState {
 
     public void setLastAthleteSyncAt(Instant lastAthleteSyncAt) {
         this.lastAthleteSyncAt = lastAthleteSyncAt;
+    }
+
+    public Instant getLastKudosCommentsSyncAt() {
+        return lastKudosCommentsSyncAt;
+    }
+
+    public void setLastKudosCommentsSyncAt(Instant lastKudosCommentsSyncAt) {
+        this.lastKudosCommentsSyncAt = lastKudosCommentsSyncAt;
     }
 }

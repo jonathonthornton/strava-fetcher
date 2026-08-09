@@ -27,6 +27,7 @@ public class StravaSyncOrchestrator {
     private static final Logger log = LoggerFactory.getLogger(StravaSyncOrchestrator.class);
     private static final Duration RECONCILIATION_INTERVAL = Duration.ofDays(30);
     private static final Duration ATHLETE_SYNC_INTERVAL = Duration.ofDays(1);
+    private static final Duration KUDOS_COMMENTS_SYNC_INTERVAL = Duration.ofDays(30);
 
     private final StravaOAuthService stravaOAuthService;
     private final FetchService fetchService;
@@ -61,7 +62,7 @@ public class StravaSyncOrchestrator {
             ensureAthleteFetched(token, syncState);
             syncNewestActivities(token, syncState);
             continueActivityBackfill(token, syncState);
-            enrichKudosAndComments(token);
+            enrichKudosAndComments(token, syncState);
             continueReconciliationSweep(token, syncState);
             syncState.setLastRunOutcome("COMPLETED");
             syncState.setLastError(null);
@@ -116,14 +117,19 @@ public class StravaSyncOrchestrator {
         }
     }
 
-    private void enrichKudosAndComments(String token) {
+    private void enrichKudosAndComments(String token, SyncState syncState) {
         if (rateLimiter.isExhausted()) {
+            return;
+        }
+        Instant lastSynced = syncState.getLastKudosCommentsSyncAt();
+        if (lastSynced != null && lastSynced.isAfter(Instant.now().minus(KUDOS_COMMENTS_SYNC_INTERVAL))) {
             return;
         }
         fetchService.fetchKudos(token);
         if (!rateLimiter.isExhausted()) {
             fetchService.fetchComments(token);
         }
+        syncState.setLastKudosCommentsSyncAt(Instant.now());
     }
 
     /**
