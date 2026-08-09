@@ -96,12 +96,12 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     int countRidesLongerThan(@Param("minDistance") int minDistance);
 
     @Query(value = """
-            SELECT bike.name,
+            SELECT COALESCE(bike.name, 'Unknown') AS name,
                    COUNT(ride_activity.id) AS rides
             FROM strava.ride_activity
-                     JOIN strava.bike ON strava.ride_activity.gear_id = strava.bike.id
+                     LEFT JOIN strava.bike ON strava.ride_activity.gear_id = strava.bike.id
             WHERE ride_activity.distance >= :minDistance
-            GROUP BY bike.name
+            GROUP BY COALESCE(bike.name, 'Unknown')
             ORDER BY rides DESC
             """, nativeQuery = true)
     List<LongRidesByBikeDTO> findLongRidesByBike(@Param("minDistance") int minDistance);
