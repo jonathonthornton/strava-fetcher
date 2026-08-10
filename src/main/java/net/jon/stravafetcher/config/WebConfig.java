@@ -3,6 +3,7 @@ package net.jon.stravafetcher.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -11,10 +12,21 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${cors.allowedOrigins}")
     private String[] allowedOrigins;
 
+    private final SyncTriggerInterceptor syncTriggerInterceptor;
+
+    public WebConfig(SyncTriggerInterceptor syncTriggerInterceptor) {
+        this.syncTriggerInterceptor = syncTriggerInterceptor;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "OPTIONS");
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(syncTriggerInterceptor).addPathPatterns("/**");
     }
 }

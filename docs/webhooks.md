@@ -1,5 +1,10 @@
 # Webhook-driven sync design
 
+> **Status:** shelved in favor of the lighter approach in
+> [`interaction-triggered-sync.md`](./interaction-triggered-sync.md), which
+> was implemented instead. Revisit this doc if that approach's staleness
+> (bounded by visit cadence, not wall-clock time) becomes a real problem.
+
 Design for replacing polling-based activity discovery with Strava's push
 webhook (https://developers.strava.com/docs/webhooks/), reducing scheduled
 API usage. Complements, but doesn't replace, the existing sweep-based
