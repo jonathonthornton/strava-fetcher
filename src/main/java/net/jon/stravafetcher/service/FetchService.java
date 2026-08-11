@@ -73,13 +73,6 @@ public class FetchService {
         athleteRepository.save(athlete);
     }
 
-    public FetchResult fetchAllActivities(String accessToken) {
-        log.debug("Fetching all activities");
-        ZonedDateTime before = ZonedDateTime.now();
-        log.info("Fetching activities between {} and {}", EARLIEST_POSSIBLE_DATE, before);
-        return fetchActivities(accessToken, EARLIEST_POSSIBLE_DATE, before);
-    }
-
     /**
      * Continues the reconciliation sweep: fetches one batch of activities
      * walking backward from {@code before}, with no lower bound, re-saving
