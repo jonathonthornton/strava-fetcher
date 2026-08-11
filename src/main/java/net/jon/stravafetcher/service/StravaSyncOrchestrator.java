@@ -1,6 +1,6 @@
 package net.jon.stravafetcher.service;
 
-import net.jon.stravafetcher.client.StravaRateLimiter;
+import net.jon.stravafetcher.controller.StravaRateLimiter;
 import net.jon.stravafetcher.exception.StravaRateLimitException;
 import net.jon.stravafetcher.model.OAuthToken;
 import net.jon.stravafetcher.model.SyncState;

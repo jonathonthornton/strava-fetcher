@@ -1,6 +1,6 @@
 package net.jon.stravafetcher.service;
 
-import net.jon.stravafetcher.client.StravaRateLimiter;
+import net.jon.stravafetcher.controller.StravaRateLimiter;
 import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.Follower;
 import net.jon.stravafetcher.model.Kudos;

@@ -1,4 +1,4 @@
-package net.jon.stravafetcher.client;
+package net.jon.stravafetcher.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

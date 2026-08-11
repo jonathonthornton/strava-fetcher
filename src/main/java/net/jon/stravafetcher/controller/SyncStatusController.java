@@ -1,6 +1,5 @@
 package net.jon.stravafetcher.controller;
 
-import net.jon.stravafetcher.client.StravaRateLimiter;
 import net.jon.stravafetcher.dto.SyncStatusDTO;
 import net.jon.stravafetcher.model.RideActivity;
 import net.jon.stravafetcher.repository.RideActivityRepository;

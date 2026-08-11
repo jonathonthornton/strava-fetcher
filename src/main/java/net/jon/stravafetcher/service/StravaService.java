@@ -3,7 +3,7 @@ package net.jon.stravafetcher.service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import net.jon.stravafetcher.client.StravaRateLimiter;
+import net.jon.stravafetcher.controller.StravaRateLimiter;
 import net.jon.stravafetcher.exception.StravaRateLimitException;
 import net.jon.stravafetcher.model.Athlete;
 import net.jon.stravafetcher.model.Comment;
