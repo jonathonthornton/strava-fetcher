@@ -35,7 +35,7 @@ public class StravaService {
     }
 
     public List<RideActivity> getActivities(String accessToken, int page, int perPage, long after, long before) {
-        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+        String url = UriComponentsBuilder.fromUriString(STRAVA_API_BASE_URL)
                 .path("/athlete/activities")
                 .queryParam("page", page)
                 .queryParam("per_page", perPage)
@@ -47,19 +47,8 @@ public class StravaService {
         return Arrays.asList(rideActivities != null ? rideActivities : new RideActivity[0]);
     }
 
-    public List<RideActivity> getActivities(String accessToken, int page, int perPage) {
-        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
-                .path("/athlete/activities")
-                .queryParam("page", page)
-                .queryParam("per_page", perPage)
-                .toUriString();
-
-        RideActivity[] rideActivities = fetchData(url, accessToken, RideActivity[].class);
-        return Arrays.asList(rideActivities != null ? rideActivities : new RideActivity[0]);
-    }
-
     public Athlete getAthlete(String accessToken) {
-        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+        String url = UriComponentsBuilder.fromUriString(STRAVA_API_BASE_URL)
                 .path("/athlete")
                 .toUriString();
 
@@ -67,7 +56,7 @@ public class StravaService {
     }
 
     public List<Comment> getActivityComments(String accessToken, long activityId) {
-        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+        String url = UriComponentsBuilder.fromUriString(STRAVA_API_BASE_URL)
                 .path("/activities/" + activityId + "/comments")
                 .toUriString();
 
@@ -76,7 +65,7 @@ public class StravaService {
     }
 
     public List<Follower> getActivityKudos(String accessToken, long activityId) {
-        String url = UriComponentsBuilder.fromHttpUrl(STRAVA_API_BASE_URL)
+        String url = UriComponentsBuilder.fromUriString(STRAVA_API_BASE_URL)
                 .path("/activities/" + activityId + "/kudos")
                 .toUriString();
 

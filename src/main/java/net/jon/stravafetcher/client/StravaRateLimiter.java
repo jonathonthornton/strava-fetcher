@@ -22,7 +22,7 @@ public class StravaRateLimiter {
     private static final String USAGE_HEADER = "X-ReadRateLimit-Usage";
 
     // Stop short of Strava's published limits to leave headroom for
-    // concurrent traffic (token refreshes, manual debugging, etc).
+    // concurrent traffic (token refreshes, manual debugging, etc.).
     private static final int SAFETY_MARGIN = 20;
 
     // Strava's default non-upload limits: 100 per 15 min, 1000 per day.
@@ -56,15 +56,15 @@ public class StravaRateLimiter {
     }
 
     public boolean isExhausted() {
-        return !hasBudgetFor(1);
+        return notHasBudgetFor(1);
     }
 
-    public boolean hasBudgetFor(int requestCount) {
+    public boolean notHasBudgetFor(int requestCount) {
         if (rateLimitedUntil != null && Instant.now().isBefore(rateLimitedUntil)) {
-            return false;
+            return true;
         }
-        return shortTermUsage + requestCount <= shortTermLimit - SAFETY_MARGIN
-                && dailyUsage + requestCount <= dailyLimit - SAFETY_MARGIN;
+        return shortTermUsage + requestCount > shortTermLimit - SAFETY_MARGIN
+                || dailyUsage + requestCount > dailyLimit - SAFETY_MARGIN;
     }
 
     public int getShortTermUsage() {

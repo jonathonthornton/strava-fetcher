@@ -1,7 +1,6 @@
 package net.jon.stravafetcher.service;
 
 import net.jon.stravafetcher.repository.RideActivityRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,8 +9,11 @@ import java.util.List;
 public class EddingtonNumberService {
     private static final int MAX_DISTANCES = 300;
 
-    @Autowired
-    private RideActivityRepository rideActivityRepository;
+    private final RideActivityRepository rideActivityRepository;
+
+    public EddingtonNumberService(RideActivityRepository rideActivityRepository) {
+        this.rideActivityRepository = rideActivityRepository;
+    }
 
     public  int calculateEddingtonNumber() {
         List<Integer> dailyDistances = rideActivityRepository.findDistancesDesc(MAX_DISTANCES);

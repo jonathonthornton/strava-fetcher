@@ -54,7 +54,7 @@ public class StravaOAuthService {
     }
 
     public String getAuthorizationUrl() {
-        return UriComponentsBuilder.fromHttpUrl(STRAVA_AUTHORIZE_URL)
+        return UriComponentsBuilder.fromUriString(STRAVA_AUTHORIZE_URL)
                 .queryParam("client_id", clientId)
                 .queryParam("response_type", "code")
                 .queryParam("redirect_uri", redirectUri)

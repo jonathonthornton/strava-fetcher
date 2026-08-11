@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Fallback trigger only. Primary sync triggering now happens per-request via
- * {@link SyncTriggerInterceptor} + {@link SyncTriggerService} — this tick
+ * {@link SyncTriggerService} — this tick
  * exists so backfill/reconciliation/kudos-comments progress (and a missed
  * request-driven activity sync) still happens during stretches where nobody
  * opens the app.

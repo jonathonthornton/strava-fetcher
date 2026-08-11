@@ -15,7 +15,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,9 +66,7 @@ public class FetchService {
     public void fetchAthlete(String accessToken) {
         Athlete athlete = stravaService.getAthlete(accessToken);
         log.debug("Fetched athlete {}", athlete);
-        athlete.getBikes().forEach(bike -> {
-            bike.setAthlete(athlete);
-        });
+        athlete.getBikes().forEach(bike -> bike.setAthlete(athlete));
         athleteRepository.save(athlete);
     }
 
@@ -127,7 +124,7 @@ public class FetchService {
         ZonedDateTime before = ZonedDateTime.now();
         ZonedDateTime after = lastSyncAt != null
                 ? lastSyncAt.minus(SYNC_OVERLAP_MARGIN).atZone(ZoneOffset.UTC)
-                : before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
+                : before.minusMonths(MONTHS_TO_FETCH);
         log.info("Fetching activities between {} and {}", after, before);
         return fetchActivities(accessToken, after, before);
     }
@@ -137,7 +134,7 @@ public class FetchService {
         ZonedDateTime before = oldestActivity
                 .map(activity -> activity.getStartDateLocal().atZone(ZoneOffset.of(activity.getTimezone())))
                 .orElseGet(ZonedDateTime::now);
-        ZonedDateTime after = before.minus(MONTHS_TO_FETCH, ChronoUnit.MONTHS);
+        ZonedDateTime after = before.minusMonths(MONTHS_TO_FETCH);
         log.info("Fetching activities between {} and {}", after, before);
         return fetchActivities(accessToken, after, before);
     }
@@ -145,7 +142,7 @@ public class FetchService {
     public void fetchKudos(String accessToken) {
         log.debug("Fetching kudos");
         for (RideActivity activity : rideActivityRepository.findPublicActivitiesWithMismatchedKudosCounts()) {
-            if (!rateLimiter.hasBudgetFor(1)) {
+            if (rateLimiter.notHasBudgetFor(1)) {
                 log.info("Rate limit budget low, pausing kudos fetch");
                 break;
             }
@@ -163,7 +160,7 @@ public class FetchService {
     public void fetchComments(String accessToken) {
         log.debug("Fetching comments");
         for (RideActivity activity : rideActivityRepository.findPublicActivitiesWithMismatchedCommentCounts()) {
-            if (!rateLimiter.hasBudgetFor(1)) {
+            if (rateLimiter.notHasBudgetFor(1)) {
                 log.info("Rate limit budget low, pausing comments fetch");
                 break;
             }
@@ -183,7 +180,7 @@ public class FetchService {
         Instant oldestFetchedAt = null;
 
         do {
-            if (!rateLimiter.hasBudgetFor(1)) {
+            if (rateLimiter.notHasBudgetFor(1)) {
                 log.info("Rate limit budget low, pausing activity fetch at page {}", page);
                 return new FetchResult(fetched, true, false, oldestFetchedAt);
             }
@@ -208,7 +205,7 @@ public class FetchService {
                     rideActivityRepository.save(activity);
                 });
                 // Strava returns activities newest-first within a page, so the last one is the oldest.
-                RideActivity oldestInPage = activities.get(activities.size() - 1);
+                RideActivity oldestInPage = activities.getLast();
                 oldestFetchedAt = oldestInPage.getStartDateLocal()
                         .atZone(ZoneOffset.of(oldestInPage.getTimezone()))
                         .toInstant();
