@@ -101,7 +101,13 @@ public class StravaSyncOrchestrator {
         // tick's window (plus FetchService's own overlap margin on top).
         Instant fetchStartedAt = Instant.now();
         FetchService.FetchResult result = fetchService.fetchRecentActivities(token, syncState.getLastActivitySyncAt());
-        if (result.reachedEnd()) {
+        // A short page with zero activities doesn't mean the window is empty —
+        // Strava may just not have ingested the newest activity yet. Only
+        // advance the cursor once we've actually seen something, so a slow
+        // upload gets picked up on the next tick instead of falling below the
+        // window floor permanently (see reconciliation.md for the sweep that
+        // exists as a last-resort catch-all for this class of gap).
+        if (result.reachedEnd() && result.fetchedCount() > 0) {
             syncState.setLastActivitySyncAt(fetchStartedAt);
         }
     }
