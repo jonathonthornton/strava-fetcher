@@ -28,7 +28,6 @@ import java.util.List;
 public class ActivityController {
     private static final Logger log = LoggerFactory.getLogger(ActivityController.class);
     private static final int LONG_RIDE_DISTANCE = 200;
-    private static final int FAST_RIDE_COUNT_LIMIT = 100;
 
     private final RideActivityRepository rideActivityRepository;
     private final BikeRepository bikeRepository;
@@ -60,10 +59,10 @@ public class ActivityController {
                 .toList();
     }
 
-    @GetMapping("/fast-rides")
-    public List<RideActivityDTO> getFastRides() {
-        log.debug("getFastRides called");
-        return rideActivityRepository.findFastestRides(FAST_RIDE_COUNT_LIMIT).stream()
+    @GetMapping("/fast-rides/{limit}")
+    public List<RideActivityDTO> getFastRides(@PathVariable int limit) {
+        log.debug("getFastRides called with limit={}", limit);
+        return rideActivityRepository.findFastestRides(limit).stream()
                 .map(RideActivityMapper::mapToDTO)
                 .toList();
     }
