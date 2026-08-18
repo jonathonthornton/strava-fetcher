@@ -57,6 +57,9 @@ public interface RideActivityRepository extends JpaRepository<RideActivity, Long
     @Query(value = "SELECT * FROM strava.ride_activity ORDER BY start_date_local DESC LIMIT :n", nativeQuery = true)
     List<RideActivity> findRecentRides(@Param("n") int n);
 
+    @Query(value = "SELECT * FROM strava.ride_activity ORDER BY average_speed DESC LIMIT :n", nativeQuery = true)
+    List<RideActivity> findFastestRides(@Param("n") int n);
+
     @Query(value = """
             SELECT COALESCE(bike.name, 'Unknown') AS name,
                    COUNT(ride_activity.id) AS rides,

@@ -59,6 +59,14 @@ public class ActivityController {
                 .toList();
     }
 
+    @GetMapping("/fast-rides")
+    public List<RideActivityDTO> getFastRides() {
+        log.debug("getFastRides called");
+        return rideActivityRepository.findFastestRides(100).stream()
+                .map(RideActivityMapper::mapToDTO)
+                .toList();
+    }
+
     @GetMapping("/long-rides")
     public List<RideActivityDTO> getLongRides() {
         log.debug("getLongRides called");
